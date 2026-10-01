@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VV妮可科研绘图·数据驱动科研绘图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; color:#7A6353;
+    background:#FFF7EE;
+    background-image:radial-gradient(circle at 12% 8%, #FFE9C9 0, transparent 26%), radial-gradient(circle at 88% 12%, #FBD9E8 0, transparent 24%), radial-gradient(circle at 50% 100%, #E4F0DC 0, transparent 30%); }
+  .wrap { max-width:1220px; margin:0 auto; padding:0 20px 60px; }
+  header.top { background:linear-gradient(120deg,#F7B955,#F0913C); color:#fff; padding:24px 0 20px; box-shadow:0 4px 18px rgba(232,127,42,.25); }
+  header.top .wrap { display:flex; align-items:center; gap:16px; padding-bottom:0; }
+  header.top h1 { font-size:24px; letter-spacing:2px; text-shadow:0 2px 6px rgba(160,80,10,.25); }
+  header.top p { margin-top:6px; font-size:13px; opacity:.92; }
+  .mascot { flex:0 0 auto; filter:drop-shadow(0 3px 5px rgba(160,80,10,.3)); animation:bob 3.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-4px) rotate(2deg);} }
+  nav.stepper { display:flex; gap:10px; margin:20px 0; }
+  nav.stepper button { flex:1; border:2px solid #F3E2CC; background:#FFFDF9; border-radius:999px; padding:10px 6px; font-size:13px; cursor:pointer; color:#B49B85; transition:all .18s; }
+  nav.stepper button b { display:block; font-size:15px; margin-bottom:2px; color:#7A6353; }
+  nav.stepper button.active { border-color:#F0913C; background:#FFF1DE; box-shadow:0 4px 12px rgba(240,145,60,.18); }
+  nav.stepper button.active b { color:#6B4A2F; }
+  nav.stepper button:hover { transform:translateY(-1px); }
+  section.step { display:none; }
+  section.step.on { display:block; }
+  .card { background:#FFFDF9; border:1px solid #F3E2CC; border-radius:18px; padding:18px 20px; margin-bottom:16px; box-shadow:0 6px 18px rgba(214,164,110,.12); }
+  .card h2 { font-size:16px; margin-bottom:10px; color:#6B4A2F; }
+  .card h3 { font-size:14px; margin:12px 0 8px; color:#A06A35; }
+  .hint { font-size:12.5px; color:#B49B85; line-height:1.9; }
+  .dropzone { border:2.5px dashed #E8A95C; border-radius:18px; padding:38px 20px; text-align:center; color:#A06A35; cursor:pointer; background:#FFF9F0; transition:all .18s; }
+  .dropzone:hover { border-color:#F0913C; background:#FFF3E2; }
+  .dropzone.over { border-color:#F0913C; background:#FFE9C9; transform:scale(1.005); }
+  .btn { display:inline-block; border:none; border-radius:999px; padding:9px 22px; font-size:13.5px; cursor:pointer; background:linear-gradient(120deg,#F5A54B,#E87F2A); color:#fff; margin:4px 6px 4px 0; box-shadow:0 3px 10px rgba(232,127,42,.3); transition:all .18s; }
+  .btn:hover { filter:brightness(1.06); transform:translateY(-1px); box-shadow:0 5px 14px rgba(232,127,42,.38); }
+  .btn.ghost { background:#FFFDF9; color:#A06A35; border:1.5px solid #EAD3B8; box-shadow:none; }
+  .btn.ghost:hover { background:#FFF3E2; border-color:#F0913C; }
+  .btn:disabled { opacity:.45; cursor:default; transform:none; }
+  .filegrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px; margin-top:12px; }
+  .filecard { border:1px solid #F3E2CC; border-radius:14px; padding:12px 14px; background:#FFFDF9; box-shadow:0 3px 10px rgba(214,164,110,.1); }
+  .filecard .fname { font-weight:700; font-size:13.5px; word-break:break-all; color:#6B4A2F; }
+  .filecard .fmeta { font-size:12px; color:#B49B85; margin:4px 0 8px; }
+  table.schema { width:100%; border-collapse:collapse; font-size:12px; }
+  table.schema th, table.schema td { border:1px solid #F3E2CC; padding:5px 8px; text-align:left; }
+  table.schema th { background:#FBEEDC; color:#A06A35; font-weight:600; }
+  table.schema td { background:#FFFDF9; }
+  .tag { display:inline-block; font-size:11px; border-radius:999px; padding:2px 10px; margin:1px 3px 1px 0; font-weight:600; }
+  .tag.num { background:#FFE9C9; color:#C97F3A; }
+  .tag.cat { background:#F3E4F7; color:#9B5FA6; }
+  .tag.dt { background:#DFF2E3; color:#3E8E5A; }
+  .tag.ok { background:#DFF2E3; color:#3E8E5A; }
+  .tag.warn { background:#FFF1D6; color:#B26A00; }
+  .recgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; margin-top:12px; }
+  .reccard { border:1px solid #F3E2CC; border-radius:14px; padding:14px 16px; background:#FFFDF9; box-shadow:0 3px 10px rgba(214,164,110,.1); transition:all .18s; }
+  .reccard:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(214,164,110,.18); }
+  .reccard .rname { font-size:14.5px; font-weight:700; color:#6B4A2F; }
+  .reccard .rwhy { font-size:12.5px; color:#7A6353; margin:6px 0 10px; line-height:1.7; }
+  .reccard .rmap { font-size:12px; color:#B49B85; margin-bottom:10px; }
+  .reccard .rmap code { background:#FBEEDC; border-radius:6px; padding:1px 6px; font-family:Consolas,monospace; color:#A06A35; }
+  .tplgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(215px,1fr)); gap:12px; margin-top:12px; }
+  .tplcard { border:1px solid #F3E2CC; border-radius:14px; padding:10px; background:#FFFDF9; text-align:center; transition:all .18s; }
+  .tplcard:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(214,164,110,.18); }
+  .tplcard svg.thumb { width:100%; height:110px; background:#FFF9F0; border-radius:10px; border:1px solid #F3E2CC; }
+  .tplcard .tname { font-size:13.5px; font-weight:700; margin:8px 0 2px; color:#6B4A2F; }
+  .tplcard .tstyle { font-size:11.5px; color:#B49B85; margin-bottom:8px; }
+  .palsw { display:flex; gap:4px; justify-content:center; margin:6px 0 2px; }
+  .palsw span { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,.08); }
+  .tplcard img.inspire { width:100%; height:110px; object-fit:cover; border-radius:10px; border:1px solid #F3E2CC; background:#FFF9F0; }
+  .tplcard .tname a { color:#6B4A2F; text-decoration:none; }
+  .tplcard .tname a:hover { color:#E87F2A; text-decoration:underline; }
+  .ctl { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; margin:10px 0; font-size:13px; }
+  .ctl label { color:#A06A35; }
+  .ctl select, .ctl input[type=text], .ctl input[type=password] { border:1.5px solid #EAD3B8; border-radius:10px; padding:6px 10px; font-size:13px; max-width:220px; background:#FFFEFB; color:#6B4A2F; }
+  .ctl select:focus, .ctl input:focus { outline:none; border-color:#F0913C; box-shadow:0 0 0 3px rgba(240,145,60,.15); }
+  .ctl input[type=text], .ctl input[type=password] { border:1.5px solid #EAD3B8; border-radius:10px; padding:6px 10px; font-size:13px; background:#FFFEFB; color:#6B4A2F; }
+  #chartDiv { width:100%; height:540px; border:1px solid #F3E2CC; border-radius:14px; background:#fff; box-shadow:0 4px 14px rgba(214,164,110,.1); }
+  .err { background:#FDEEEC; border:1px solid #F2B8B0; color:#B04A3A; border-radius:12px; padding:10px 14px; font-size:13px; margin:10px 0; }
+  .okmsg { background:#E9F6EC; border:1px solid #BFE3C2; color:#3E8E5A; border-radius:12px; padding:10px 14px; font-size:13px; margin:10px 0; }
+  footer { text-align:center; font-size:12px; color:#C4A98C; margin-top:30px; }
+  kbd { background:#FBEEDC; border-radius:6px; padding:1px 6px; font-family:Consolas,monospace; font-size:12px; color:#A06A35; }
+  .relrow { border:1px solid #F3E2CC; border-radius:12px; padding:10px 14px; margin:8px 0; background:#FFFDF9; display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; justify-content:space-between; }
+  .relrow .rdesc { font-size:13px; color:#6B4A2F; flex:1; min-width:240px; line-height:1.9; }
+  .relrow .rdesc code { background:#FBEEDC; border-radius:6px; padding:1px 6px; font-family:Consolas,monospace; color:#A06A35; font-size:12px; }
+  details summary { outline:none; }
+  details summary:hover { color:#E87F2A; }
+  textarea { border:1.5px solid #EAD3B8 !important; border-radius:12px !important; background:#FFFEFB; color:#6B4A2F; }
+  textarea:focus { outline:none; border-color:#F0913C !important; box-shadow:0 0 0 3px rgba(240,145,60,.15); }
+  ::selection { background:#FFE9C9; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <svg class="mascot" viewBox="0 0 64 64" width="58" height="58" aria-hidden="true">
+    <circle cx="13" cy="22" r="7.5" fill="#E8A95C"/><circle cx="13" cy="22" r="3.6" fill="#C97F3A"/>
+    <circle cx="51" cy="22" r="7.5" fill="#E8A95C"/><circle cx="51" cy="22" r="3.6" fill="#C97F3A"/>
+    <ellipse cx="32" cy="37" rx="24" ry="20" fill="#E8A95C"/>
+    <path d="M25 15 q3.5 -8 7 0 q3.5 -8 7 0" stroke="#F0913C" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M19 35 q4.5 4.5 9 0" stroke="#6B4A2F" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M36 35 q4.5 4.5 9 0" stroke="#6B4A2F" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <ellipse cx="32" cy="45" rx="5" ry="4" fill="#6B4A2F"/>
+    <circle cx="17" cy="43" r="4.2" fill="#F5B8C4" opacity=".75"/>
+    <circle cx="47" cy="43" r="4.2" fill="#F5B8C4" opacity=".75"/>
+  </svg>
+  <div>
+  <h1>VV妮可科研绘图·数据驱动科研绘图</h1>
+  <p>投喂数据压缩包 → 推断数据能支撑的图类型 → 匹配期刊样板图 → 用真实数据绘制导出</p>
+  </div>
+</div></header>
+<div class="wrap">
+  <nav class="stepper">
+    <button data-s="1" class="active"><b>1. 投喂数据</b>压缩包 / CSV</button>
+    <button data-s="2"><b>2. 图类型推断</b>数据能支撑什么图</button>
+    <button data-s="3"><b>3. 样板图库</b>期刊风格模板</button>
+    <button data-s="4"><b>4. 绘制导出</b>真实数据成图</button>
+  </nav>
+
+  <section class="step on" id="step1"><div class="card">
+    <h2>投喂数据压缩包</h2>
+    <p class="hint">把冻结数据打包成 <kbd>.zip</kbd>（内含一个或多个 <kbd>.csv</kbd>）拖进来，也可以直接投喂单个 CSV。页面只在浏览器本地解析，不上传任何服务器。</p>
+    <div class="dropzone" id="dz" style="margin-top:12px">把 .zip / .csv 拖到这里，或点击选择文件，或复制文件后按 <kbd>Ctrl+V</kbd> 直接粘贴<br><span class="hint">支持多选</span></div>
+    <input type="file" id="fileInput" accept=".zip,.csv,.txt" multiple style="display:none">
+    <div style="margin-top:10px">
+      <button class="btn ghost" id="btnSample">载入示例数据</button>
+      <button class="btn ghost" id="btnClear">清空</button>
+    </div>
+    <div id="dzMsg"></div>
+    <div class="filegrid" id="fileGrid"></div>
+    <details style="margin-top:14px">
+      <summary style="cursor:pointer;font-size:13.5px;color:#A06A35;font-weight:700">论文原文 / 研究逻辑（可选，辅助数据使用）</summary>
+      <p class="hint" style="margin-top:6px">粘贴论文摘要、方法段落，或按条列出研究逻辑（例：1. 对比不同处理组的指标差异；2. 分析两个变量的相关性）。工具会把文中提到的变量映射到你的数据列，在步骤 2 给出贴合论文的绘图建议。内容只存本浏览器，不外发。</p>
+      <textarea id="paperText" rows="6" style="width:100%;margin-top:8px;padding:10px;font-size:13px" placeholder="粘贴论文原文，或写下研究逻辑流程…"></textarea>
+    </details>
+  </div></section>
+
+  <section class="step" id="step2"><div class="card">
+    <h2>数据能支撑的图类型</h2>
+    <p class="hint">规则引擎按列类型推断：数值列、分类列、时间列的组合决定可绘制的图。每张卡片给出推荐的列映射，点击直接去绘制。</p>
+    <div id="recMsg"></div>
+    <div class="recgrid" id="recGrid"></div>
+  </div>
+  <div class="card">
+    <h2>数据关系发现</h2>
+    <p class="hint">自动分析列与列之间的关系：哪些数值列高度相关、哪些分组差异显著、哪些列可作多文件关联键。帮你决定数据怎么用、怎么结合绘图（本地计算，|r|≥0.6 或 η²≥0.14 才列出）。</p>
+    <div id="relList"></div>
+  </div>
+  <div class="card">
+    <h2>论文逻辑 → 数据映射</h2>
+    <p class="hint">把步骤 1 粘贴的论文原文 / 研究逻辑逐条映射到你的数据列，并推荐贴合的图。</p>
+    <div id="paperMap"></div>
+  </div></section>
+
+  <section class="step" id="step3"><div class="card">
+    <h2>样板图库</h2>
+    <p class="hint">10 种图 × 5 种期刊风 = 50 个样板，程序化生成。绿色徽标表示<b>你的数据可支撑</b>，点"用此样板绘制"会自动套用该样板的配色/字体/网格。也可以导入第三方图库索引 JSON（数组，每项含 <kbd>id</kbd> <kbd>name</kbd> <kbd>chart</kbd> <kbd>thumb</kbd>SVG 字符串）。</p>
+    <div class="ctl">
+      <label><input type="checkbox" id="fltSupported" checked> 只看我的数据可支撑的</label>
+      <label>图类型 <select id="fltChart"><option value="">全部</option></select></label>
+      <label>风格 <select id="fltStyle"><option value="">全部风格</option></select></label>
+      <button class="btn ghost" id="btnImportTpl">导入索引 JSON</button>
+      <input type="file" id="tplInput" accept=".json" style="display:none">
+    </div>
+    <div class="tplgrid" id="tplGrid"></div>
+  </div>
+  <div class="card">
+    <h2>我的样板 · 从图片创建</h2>
+    <p class="hint">看到喜欢的期刊图？截图投喂进来，AI 解析出配色/字体/网格，存成可复用的样板；也可以手动配色创建（完全离线）。样板保存在本浏览器，可导出分享给同门。</p>
+    <div class="ctl">
+      <button class="btn ghost" id="btnTplFromImg">从图片创建（AI 解析）</button>
+      <button class="btn ghost" id="btnTplManual">手动创建样板</button>
+      <button class="btn ghost" id="btnTplExport">导出我的样板包</button>
+      <button class="btn ghost" id="btnTplPackBtn">导入样板包</button>
+      <input type="file" id="tplImgInput" accept="image/*" style="display:none">
+      <input type="file" id="tplPackInput" accept=".json" style="display:none">
+    </div>
+    <div id="tplMaker" style="display:none;background:#FFF9F0;border:1px dashed #E8A95C;border-radius:14px;padding:14px 16px;margin-top:10px">
+      <h3 id="mkTitle" style="margin-top:0">从图片创建样板</h3>
+      <div class="ctl">
+        <img id="mkImg" style="max-width:220px;max-height:140px;border-radius:10px;border:1px solid #F3E2CC;display:none" alt="">
+        <label>图类型 <select id="mkChart"></select></label>
+        <label>名称 <input type="text" id="mkName" placeholder="如 Nature 散点风" style="width:180px"></label>
+      </div>
+      <div class="ctl" id="mkAiRow">
+        <button class="btn" id="mkParse">AI 解析风格</button>
+        <span class="hint">或直接粘贴截图（Ctrl+V）</span>
+        <span class="hint" id="mkMsg"></span>
+      </div>
+      <div class="ctl" id="mkColors"><span class="hint">配色：</span></div>
+      <div class="ctl">
+        <label>字体 <select id="mkFont"><option value="serif">衬线</option><option value="sans">无衬线</option></select></label>
+        <label><input type="checkbox" id="mkGrid" checked> 网格</label>
+      </div>
+      <div class="ctl"><span class="hint">缩略图预览：</span><span id="mkThumb" style="display:inline-block;width:200px"></span></div>
+      <div class="ctl"><button class="btn" id="mkSave">保存为样板</button> <button class="btn ghost" id="mkCancel">取消</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>论文配图灵感 · 顶会画廊 3516 张</h2>
+    <p class="hint">来自顶会论文 Figure 1 / Teaser 的真实配图（概念图、框架图、流程图为主），仅作<b>视觉灵感参考</b>，不能直接用数据绘制。图片版权归原论文作者所有，点击标题查看原文。索引按需在线加载（约 2.2MB）。</p>
+    <div class="ctl">
+      <button class="btn ghost" id="btnInspire">加载灵感图库</button>
+      <label>会议 <select id="insVenue"><option value="">全部</option></select></label>
+      <label>类型 <select id="insPattern"><option value="">全部</option></select></label>
+      <label>搜索 <input type="text" id="insQ" placeholder="标题关键词" style="width:160px"></label>
+    </div>
+    <div id="insMsg"></div>
+    <div class="tplgrid" id="insGrid"></div>
+    <div style="text-align:center;margin-top:10px"><button class="btn ghost" id="insMore" style="display:none">加载更多</button></div>
+  </div></section>
+
+  <section class="step" id="step4"><div class="card">
+    <h2>绘制导出</h2>
+    <div class="ctl">
+      <label>数据文件 <select id="dFile"></select></label>
+      <label>图类型 <select id="dChart"></select></label>
+    </div>
+    <h3>列映射</h3>
+    <div class="ctl" id="dMap"></div>
+    <h3>样式</h3>
+    <div class="ctl">
+      <label>配色 <select id="dPal">
+        <option value="academic">学术蓝（论文默认）</option>
+        <option value="nature">Nature 风</option>
+        <option value="science">Science 风（红/深蓝）</option>
+        <option value="cell">Cell 风（多彩）</option>
+        <option value="muted">柔和灰蓝</option>
+        <option value="vivid">高对比</option>
+      </select></label>
+      <label>字体 <select id="dFont"><option value="serif">衬线（Times）</option><option value="sans">无衬线</option></select></label>
+      <label><input type="checkbox" id="dGrid" checked> 网格线</label>
+      <label>标题 <input type="text" id="dTitle" placeholder="（可选）" style="width:200px"></label>
+    </div>
+    <div id="chartDiv"></div>
+    <div style="margin-top:10px">
+      <button class="btn" id="btnPNG">导出 PNG（3x）</button>
+      <button class="btn" id="btnSVG">导出 SVG</button>
+      <span class="hint" id="drawMsg"></span>
+    </div>
+  </div></section>
+
+  <footer>VV妮可科研绘图 · 单文件静态页 · 数据不出浏览器 · 绘制全部基于真实数据 · 噜噜版</footer>
+</div>
+<script>
+/* ================= 工具 ================= */
+function $(id){ return document.getElementById(id); }
+function el(tag, cls, html){ var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function msg(box, html, ok){ var d=$(box); d.innerHTML='<div class="'+(ok?'okmsg':'err')+'">'+html+'</div>'; }
+function clearMsg(box){ $(box).innerHTML=''; }
+
+/* 简易 CSV 解析（处理引号） */
+function parseCSV(text){
+  var rows=[], row=[], cur='', q=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; }
+      else cur+=c;
+    } else {
+      if(c==='"') q=true;
+      else if(c===','){ row.push(cur); cur=''; }
+      else if(c==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+      else if(c==='\r'){ /* skip */ }
+      else cur+=c;
+    }
+  }
+  if(cur!==''||row.length){ row.push(cur); rows.push(row); }
+  rows=rows.filter(function(r){ return r.length>1||(r.length===1&&r[0].trim()!==''); });
+  if(!rows.length) return null;
+  var head=rows[0].map(function(h){return h.trim();});
+  var data=rows.slice(1).map(function(r){
+    var o={}; head.forEach(function(h,j){ o[h]=(r[j]!=null?r[j].trim():'' ); }); return o;
+  });
+  return {head:head, rows:data};
+}
+function inferType(vals){
+  var v=vals.filter(function(x){return x!==''&&x!=null;});
+  if(!v.length) return 'categorical';
+  var n=v.filter(function(x){return x.trim()!==''&&isFinite(Number(x));}).length;
+  if(n/v.length>=0.9) return 'numeric';
+  var d=v.filter(function(x){return !isNaN(Date.parse(x));}).length;
+  if(d/v.length>=0.9) return 'datetime';
+  return 'categorical';
+}
+function num(x){ var n=Number(x); return isFinite(n)?n:NaN; }
+function mean(a){ return a.reduce(function(s,x){return s+x;},0)/a.length; }
+function sd(a){ if(a.length<2)return 0; var m=mean(a); return Math.sqrt(a.reduce(function(s,x){return s+(x-m)*(x-m);},0)/(a.length-1)); }
+function quant(sorted,q){ if(!sorted.length)return NaN; var p=(sorted.length-1)*q, b=Math.floor(p), r=p-b; return sorted[b]+(sorted[b+1]!=null?(sorted[b+1]-sorted[b])*r:0); }
+function pearson(a,b){
+  var n=Math.min(a.length,b.length); if(n<3) return NaN;
+  var ma=mean(a), mb=mean(b), s=0, sa=0, sb=0;
+  for(var i=0;i<n;i++){ s+=(a[i]-ma)*(b[i]-mb); sa+=(a[i]-ma)*(a[i]-ma); sb+=(b[i]-mb)*(b[i]-mb); }
+  return (sa&&sb)? s/Math.sqrt(sa*sb) : NaN;
+}
+function histBins(vals, nb){
+  var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+  if(!(hi>lo)){ lo-=0.5; hi+=0.5; }
+  var w=(hi-lo)/nb, bins=[];
+  for(var i=0;i<nb;i++) bins.push({x0:lo+i*w, x1:lo+(i+1)*w, c:0});
+  vals.forEach(function(v){ var k=Math.min(nb-1, Math.floor((v-lo)/w)); bins[k].c++; });
+  return bins;
+}
+
+/* ================= 全局状态 ================= */
+var S = { files:[], seq:0, paper:'',
+  style:{pal:'academic', font:'serif', grid:true, title:''},
+  draw:{fileId:null, chart:null, map:{}} };
+var PALS = {
+  academic:['#1f6fb2','#3d8f99','#c0392b','#e08214','#4a9d5d','#7b4d8a','#5d6d7e'],
+  nature:['#0f4c81','#5b8fb9','#e07a5f','#81b29d','#f2cc8f','#a3b18a'],
+  science:['#a6192e','#003da5','#00827a','#f2a900','#5a5a5a','#7b4d8a'],
+  cell:['#005b96','#e36414','#2a9d8f','#e9c46a','#9d0208','#6a4c93'],
+  muted:['#5d7a8c','#8fa9b8','#b9c9d4','#d9a679','#7a8c5d'],
+  vivid:['#d62728','#1f77b4','#2ca02c','#ff7f0e','#9467bd','#e377c2']
+};
+var CHARTS = {
+  'scatter':{name:'散点图', need:['x','y']},
+  'grouped-scatter':{name:'分组散点图', need:['x','y','group']},
+  'boxplot':{name:'箱线图', need:['group','value']},
+  'bar-mean':{name:'均值柱状图', need:['group','value']},
+  'grouped-bar':{name:'分组柱状图', need:['group','sub','value']},
+  'heatmap-corr':{name:'相关性热图', need:[]},
+  'line':{name:'折线图', need:['x','y']},
+  'histogram':{name:'直方图', need:['value']},
+  'bubble':{name:'气泡图', need:['x','y','size']},
+  'forest':{name:'森林图', need:['label','est','lo','hi']}
+};
+var MAP_LABEL={x:'X 轴（数值）',y:'Y 轴（数值）',group:'分组（分类）',sub:'子分组（分类）',value:'数值列',size:'气泡大小（数值）',label:'标签（分类）',est:'估计值',lo:'下限',hi:'上限'};
+
+/* ================= 样板图库（内置精选） ================= */
+function thumbScatter(){return '<svg class="thumb" viewBox="0 0 200 110"><g fill="#1f6fb2"><circle cx="30" cy="80" r="5"/><circle cx="55" cy="62" r="5"/><circle cx="80" cy="70" r="5"/><circle cx="105" cy="45" r="5"/><circle cx="130" cy="50" r="5"/><circle cx="155" cy="28" r="5"/><circle cx="42" cy="48" r="5"/><circle cx="118" cy="78" r="5"/><circle cx="142" cy="62" r="5"/><circle cx="68" cy="88" r="5"/></g><line x1="15" y1="95" x2="185" y2="95" stroke="#999"/><line x1="15" y1="95" x2="15" y2="10" stroke="#999"/></svg>';}
+function thumbGrouped(){return '<svg class="thumb" viewBox="0 0 200 110"><g fill="#1f6fb2"><circle cx="30" cy="80" r="5"/><circle cx="55" cy="66" r="5"/><circle cx="80" cy="72" r="5"/></g><g fill="#c0392b"><circle cx="105" cy="48" r="5"/><circle cx="130" cy="40" r="5"/><circle cx="155" cy="34" r="5"/></g><g fill="#4a9d5d"><circle cx="42" cy="50" r="5"/><circle cx="118" cy="70" r="5"/><circle cx="142" cy="58" r="5"/></g><line x1="15" y1="95" x2="185" y2="95" stroke="#999"/><line x1="15" y1="95" x2="15" y2="10" stroke="#999"/></svg>';}
+function thumbBox(){return '<svg class="thumb" viewBox="0 0 200 110"><g stroke="#1f6fb2" stroke-width="2" fill="#dbe9f6"><rect x="35" y="45" width="28" height="30"/><rect x="85" y="30" width="28" height="40"/><rect x="135" y="55" width="28" height="22"/></g><g stroke="#1f6fb2" stroke-width="2"><line x1="49" y1="35" x2="49" y2="85"/><line x1="99" y1="20" x2="99" y2="82"/><line x1="149" y1="48" x2="149" y2="86"/></g><line x1="15" y1="95" x2="185" y2="95" stroke="#999"/></svg>';}
+function thumbBar(){return '<svg class="thumb" viewBox="0 0 200 110"><g fill="#1f6fb2"><rect x="35" y="40" width="26" height="55"/><rect x="85" y="25" width="26" height="70"/><rect x="135" y="50" width="26" height="45"/></g><line x1="15" y1="95" x2="185" y2="95" stroke="#999"/></svg>';}
+function thumbBarG(){return '<svg class="thumb" viewBox="0 0 200 110"><g fill="#1f6fb2"><rect x="30" y="45" width="16" height="50"/><rect x="80" y="30" width="16" height="65"/><rect x="130" y="55" width="16" height="40"/></g><g fill="#e08214"><rect x="48" y="60" width="16" height="35"/><rect x="98" y="48" width="16" height="47"/><rect x="148" y="40" width="16" height="55"/></g><line x1="15" y1="95" x2="185" y2="95" stroke="#999"/></svg>';}
+function thumbHeat(){var s='<svg class="thumb" viewBox="0 0 200 110">';var c=['#1f6fb2','#7fb3d5','#f5f5f5','#e8a0a0','#c0392b'];for(var i=0;i<5;i++)for(var j=0;j<5;j++){var v=Math.abs(i-j);s+='<rect x="'+(30+i*28)+'" y="'+(8+j*19)+'" width="26" height="17" fill="'+c[Math.min(4,v)]+'"/>';}return s+'</svg>';}
+function thumbLine(){return '<svg class="thumb" viewBox="0 0 200 110"><polyline points="25,80 60,65 95,70 130,40 165,30" fill="none" stroke="#1f6fb2" stroke-width="3"/><g fill="#1f6fb2"><circle cx="25" cy="80" r="4"/><circle cx="60" cy="65" r="4"/><circle cx="95" cy="70" r="4"/><circle cx="130" cy="40" r="4"/><circle cx="165" cy="30" r="4"/></g><line x1="15" y1="95" x2="185" y2="95" stroke="#999"/><line x1="15" y1="95" x2="15" y2="10" stroke="#999"/></svg>';}
+function thumbHist(){return '<svg class="thumb" viewBox="0 0 200 110"><g fill="#3d8f99"><rect x="30" y="70" width="18" height="25"/><rect x="50" y="55" width="18" height="40"/><rect x="70" y="40" width="18" height="55"/><rect x="90" y="48" width="18" height="47"/><rect x="110" y="62" width="18" height="33"/><rect x="130" y="75" width="18" height="20"/></g><line x1="15" y1="95" x2="185" y2="95" stroke="#999"/></svg>';}
+function thumbBubble(){return '<svg class="thumb" viewBox="0 0 200 110"><g fill="#1f6fb2" opacity="0.75"><circle cx="40" cy="75" r="6"/><circle cx="80" cy="55" r="11"/><circle cx="120" cy="65" r="7"/><circle cx="155" cy="35" r="14"/><circle cx="100" cy="82" r="5"/><circle cx="60" cy="38" r="8"/></g><line x1="15" y1="95" x2="185" y2="95" stroke="#999"/><line x1="15" y1="95" x2="15" y2="10" stroke="#999"/></svg>';}
+function thumbForest(){return '<svg class="thumb" viewBox="0 0 200 110"><g stroke="#1f6fb2" stroke-width="2"><line x1="70" y1="25" x2="120" y2="25"/><line x1="50" y1="50" x2="100" y2="50"/><line x1="90" y1="75" x2="150" y2="75"/></g><g fill="#1f6fb2"><circle cx="95" cy="25" r="4"/><circle cx="75" cy="50" r="4"/><circle cx="120" cy="75" r="4"/></g><line x1="100" y1="10" x2="100" y2="95" stroke="#999" stroke-dasharray="4 3"/></svg>';}
+/* 期刊风格 × 图类型：程序化扩充样板库（10 图 × 5 风 = 50 样板，无需手工收集） */
+var STYLE_VARIANTS=[
+ {id:'academic', name:'学术蓝', pal:'academic', font:'serif', grid:true},
+ {id:'nature', name:'Nature 风', pal:'nature', font:'sans', grid:false},
+ {id:'science', name:'Science 风', pal:'science', font:'sans', grid:true},
+ {id:'cell', name:'Cell 风', pal:'cell', font:'sans', grid:false},
+ {id:'muted', name:'柔和灰蓝', pal:'muted', font:'serif', grid:true}
+];
+function lighten(hex, amt){
+  var n=parseInt(hex.slice(1),16), r=n>>16, g=(n>>8)&255, b=n&255;
+  r=Math.round(r+(255-r)*amt); g=Math.round(g+(255-g)*amt); b=Math.round(b+(255-b)*amt);
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function recolorThumb(svg, pal){
+  var m={'#1f6fb2':pal[0], '#c0392b':pal[2]||pal[0], '#4a9d5d':pal[4]||pal[1],
+          '#e08214':pal[3]||pal[1], '#3d8f99':pal[1],
+          '#dbe9f6':lighten(pal[0],.82), '#7fb3d5':lighten(pal[0],.45),
+          '#e8a0a0':lighten(pal[2]||pal[0],.5)};
+  Object.keys(m).forEach(function(k){ svg=svg.split(k).join(m[k]); });
+  return svg;
+}
+var BASE_TPLS=[
+ {chart:'scatter', desc:'两数值列的点分布', thumbFn:thumbScatter},
+ {chart:'grouped-scatter', desc:'按分类着色，带图例', thumbFn:thumbGrouped},
+ {chart:'boxplot', desc:'分组分布比较', thumbFn:thumbBox},
+ {chart:'bar-mean', desc:'分组均值对比', thumbFn:thumbBar},
+ {chart:'grouped-bar', desc:'双因素均值对比', thumbFn:thumbBarG},
+ {chart:'heatmap-corr', desc:'数值列两两 Pearson 相关', thumbFn:thumbHeat},
+ {chart:'line', desc:'随有序 X 变化的趋势', thumbFn:thumbLine},
+ {chart:'histogram', desc:'单数值列分布', thumbFn:thumbHist},
+ {chart:'bubble', desc:'X-Y-大小三维', thumbFn:thumbBubble},
+ {chart:'forest', desc:'估计值 + 置信区间', thumbFn:thumbForest}
+];
+var TEMPLATES=[];
+BASE_TPLS.forEach(function(b){
+  STYLE_VARIANTS.forEach(function(sv){
+    TEMPLATES.push({id:'t-'+b.chart+'-'+sv.id, name:CHARTS[b.chart].name+' · '+sv.name, chart:b.chart,
+      style:sv.name, desc:b.desc, thumb:recolorThumb(b.thumbFn(), PALS[sv.pal]),
+      pal:sv.pal, font:sv.font, grid:sv.grid});
+  });
+});
+
+/* ================= 步骤切换 ================= */
+document.querySelectorAll('nav.stepper button').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('nav.stepper button').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');
+    document.querySelectorAll('section.step').forEach(function(s){s.classList.remove('on');});
+    $('step'+b.dataset.s).classList.add('on');
+    if(b.dataset.s==='2'){ renderRecs(); renderRelations(); renderPaperMap(); }
+    if(b.dataset.s==='3') renderGallery();
+    if(b.dataset.s==='4') renderDraw();
+  });
+});
+function gotoStep(n){ document.querySelector('nav.stepper button[data-s="'+n+'"]').click(); }
+
+/* ================= 步骤1：投喂数据 ================= */
+var dz=$('dz'), fi=$('fileInput');
+dz.addEventListener('click', function(){ fi.click(); });
+fi.addEventListener('change', function(){ handleFiles(fi.files); fi.value=''; });
+['dragover','dragenter'].forEach(function(e){ dz.addEventListener(e, function(ev){ ev.preventDefault(); dz.classList.add('over'); }); });
+['dragleave','drop'].forEach(function(e){ dz.addEventListener(e, function(ev){ ev.preventDefault(); dz.classList.remove('over'); }); });
+dz.addEventListener('drop', function(ev){ handleFiles(ev.dataTransfer.files); });
+/* 论文原文/研究逻辑：输入即保存（localStorage），步骤2 用它做映射 */
+try{ var _sp=localStorage.getItem('nike_paper')||''; if(_sp){ S.paper=_sp; $('paperText').value=_sp; } }catch(e){}
+$('paperText').addEventListener('input', function(){ S.paper=this.value; try{ localStorage.setItem('nike_paper', this.value); }catch(e){} });
+/* 剪贴板粘贴投喂：复制文件后 Ctrl+V（输入框内粘贴文字不受影响） */
+document.addEventListener('paste', function(ev){
+  var ae=document.activeElement;
+  if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')) return;
+  var files=ev.clipboardData&&ev.clipboardData.files;
+  if(files&&files.length){
+    ev.preventDefault();
+    var mk=$('tplMaker');
+    if(mk&&mk.style.display!=='none'&&files[0].type.indexOf('image/')===0){ mkLoadImage(files[0]); return; }
+    handleFiles(files);
+  }
+});
+
+function handleFiles(list){
+  clearMsg('dzMsg');
+  var ps=[];
+  for(var i=0;i<list.length;i++){
+    (function(f){
+      var n=f.name.toLowerCase();
+      if(n.endsWith('.zip')){
+        if(typeof JSZip==='undefined'){ msg('dzMsg','JSZip 未加载（需要联网），zip 解析不可用。',''); return; }
+        ps.push(JSZip.loadAsync(f).then(function(z){
+          var jobs=[];
+          z.forEach(function(p, e){
+            if(!e.dir && /\.csv$/i.test(p) && p.indexOf('__MACOSX')<0 && p.indexOf('.DS_Store')<0){
+              jobs.push(e.async('string').then(function(t){ addCSV(f.name+' / '+p, t); }));
+            }
+          });
+          return Promise.all(jobs);
+        }).catch(function(){ msg('dzMsg','zip 解析失败：'+esc(f.name),''); }));
+      } else if(/\.(csv|txt)$/.test(n)){
+        ps.push(new Promise(function(res){ var r=new FileReader(); r.onload=function(){ addCSV(f.name, r.result); res(); }; r.readAsText(f); }));
+      } else { msg('dzMsg','跳过不支持的文件：'+esc(f.name),''); }
+    })(list[i]);
+  }
+  Promise.all(ps).then(function(){ renderFiles(); });
+}
+function addCSV(name, text){
+  var p=parseCSV(text);
+  if(!p||!p.rows.length){ msg('dzMsg','空文件或解析失败：'+esc(name),''); return; }
+  var rows=p.rows.slice(0,100000);
+  var cols=p.head.map(function(h){
+    return {name:h, type:inferType(rows.map(function(r){return r[h];}))};
+  });
+  S.files.push({id:'f'+(++S.seq), name:name, cols:cols, rows:rows, n:rows.length,
+    truncated:p.rows.length>rows.length});
+}
+function renderFiles(){
+  var g=$('fileGrid'); g.innerHTML='';
+  if(!S.files.length){ g.innerHTML='<p class="hint">还没有数据。投喂 zip/csv，或载入示例数据。</p>'; return; }
+  S.files.forEach(function(f){
+    var c=el('div','filecard');
+    var nums=f.cols.filter(function(x){return x.type==='numeric';}).length;
+    var cats=f.cols.filter(function(x){return x.type==='categorical';}).length;
+    c.innerHTML='<div class="fname">'+esc(f.name)+'</div>'+
+      '<div class="fmeta">'+f.n+' 行 × '+f.cols.length+' 列 ｜ 数值 '+nums+' / 分类 '+cats+(f.truncated?' ｜ 已截断至10万行':'')+'</div>'+
+      '<table class="schema"><tr><th>列名</th><th>类型</th></tr>'+
+      f.cols.map(function(x){
+        var t=x.type==='numeric'?'<span class="tag num">数值</span>':(x.type==='datetime'?'<span class="tag dt">时间</span>':'<span class="tag cat">分类</span>');
+        return '<tr><td>'+esc(x.name)+'</td><td>'+t+'</td></tr>';
+      }).join('')+'</table>';
+    g.appendChild(c);
+  });
+}
+$('btnClear').addEventListener('click', function(){ S.files=[]; S.draw={fileId:null,chart:null,map:{}}; renderFiles(); clearMsg('dzMsg'); });
+$('btnSample').addEventListener('click', function(){
+  var groups=['G1','G2','G3','G4','G5','G6'], csv='Group,ValueA,ValueB,Diff\n';
+  for(var s=0;s<6;s++) for(var i=0;i<30;i++){
+    var a=(50+Math.random()*20).toFixed(1), b=(num(a)+(Math.random()*6-3)).toFixed(2);
+    csv+=groups[s]+','+a+','+b+','+Math.abs(num(b)-num(a)).toFixed(2)+'\n';
+  }
+  addCSV('示例数据_180.csv', csv);
+  renderFiles(); msg('dzMsg','已载入示例数据：180 行 × 4 列（Group/ValueA/ValueB/Diff）。', true);
+});
+
+/* ================= 步骤2：图类型推断 ================= */
+function recommend(f){
+  var nums=f.cols.filter(function(c){return c.type==='numeric';}).map(function(c){return c.name;});
+  var cats=f.cols.filter(function(c){return c.type==='categorical';}).map(function(c){return c.name;});
+  var dts=f.cols.filter(function(c){return c.type==='datetime';}).map(function(c){return c.name;});
+  var R=[];
+  function push(chart, map, why){ R.push({fileId:f.id, chart:chart, map:map, why:why}); }
+  if(nums.length>=2) push('scatter',{x:nums[0],y:nums[1]}, nums[0]+' vs '+nums[1]+' 的点分布');
+  if(nums.length>=2&&cats.length>=1) push('grouped-scatter',{x:nums[0],y:nums[1],group:cats[0]},'按 '+cats[0]+' 着色分组');
+  if(cats.length>=1&&nums.length>=1) push('boxplot',{group:cats[0],value:nums[0]}, cats[0]+' 分组下 '+nums[0]+' 的分布');
+  if(cats.length>=1&&nums.length>=1) push('bar-mean',{group:cats[0],value:nums[0]},'各 '+cats[0]+' 的 '+nums[0]+' 均值');
+  if(cats.length>=2&&nums.length>=1) push('grouped-bar',{group:cats[0],sub:cats[1],value:nums[0]}, cats[0]+' × '+cats[1]+' 双因素均值');
+  if(nums.length>=3) push('heatmap-corr',{}, nums.length+' 个数值列的两两 Pearson 相关');
+  var xo=dts[0]||nums[0];
+  if(xo&&nums.length>=1){ var y=nums[0]===xo?(nums[1]||nums[0]):nums[0]; push('line',{x:xo,y:y},'沿 '+xo+' 的趋势'); }
+  if(nums.length>=1) push('histogram',{value:nums[0]}, nums[0]+' 的分布直方图');
+  if(nums.length>=3) push('bubble',{x:nums[0],y:nums[1],size:nums[2]},'第三维用气泡大小表示 '+nums[2]);
+  if(cats.length>=1&&nums.length>=3) push('forest',{label:cats[0],est:nums[0],lo:nums[1],hi:nums[2]},'估计值与区间（请确认列含义）');
+  return R;
+}
+function supportedCharts(){
+  var s={};
+  S.files.forEach(function(f){ recommend(f).forEach(function(r){ s[r.chart]=1; }); });
+  return s;
+}
+function renderRecs(){
+  var g=$('recGrid'); g.innerHTML='';
+  if(!S.files.length){ $('recMsg').innerHTML='<div class="err">先在步骤 1 投喂数据。</div>'; return; }
+  clearMsg('recMsg');
+  S.files.forEach(function(f){
+    recommend(f).forEach(function(r){
+      var c=el('div','reccard');
+      var mapHtml=Object.keys(r.map).map(function(k){return k+':<code>'+esc(r.map[k])+'</code>';}).join(' ｜ ');
+      c.innerHTML='<div class="rname">'+CHARTS[r.chart].name+'</div>'+
+        '<div class="rwhy">'+esc(f.name)+'<br>'+esc(r.why)+'</div>'+
+        (mapHtml?'<div class="rmap">'+mapHtml+'</div>':'')+
+        '<button class="btn">用此配置绘制</button> ';
+      c.querySelector('button').addEventListener('click', function(){
+        S.draw.fileId=r.fileId; S.draw.chart=r.chart; S.draw.map=Object.assign({}, r.map); S.draw.tplId=null;
+        gotoStep(4);
+      });
+      g.appendChild(c);
+    });
+  });
+}
+
+/* ================= 数据关系分析（离线，本地计算） ================= */
+function sampleIdx(n, max){ max=max||4000; if(n<=max){ var a=[]; for(var i=0;i<n;i++) a.push(i); return a; }
+  var a=[], step=n/max; for(var i=0;i<max;i++) a.push(Math.floor(i*step)); return a; }
+function numVals(f, col, idxs){ var a=[]; for(var i=0;i<idxs.length;i++){ var v=num(f.rows[idxs[i]][col]); if(isFinite(v)) a.push(v); } return a; }
+function nunique(f, col, idxs){ var s={}; for(var i=0;i<idxs.length;i++) s[String(f.rows[idxs[i]][col])]=1; return Object.keys(s).length; }
+function isIdLike(name){ return /id|编号|序号|sample/i.test(name); }
+function eta2(f, catCol, numCol, idxs){
+  var groups={};
+  for(var i=0;i<idxs.length;i++){ var r=f.rows[idxs[i]], g=String(r[catCol]), v=num(r[numCol]); if(!isFinite(v)) continue;
+    (groups[g]=groups[g]||[]).push(v); }
+  var keys=Object.keys(groups); if(keys.length<2) return null;
+  var all=[]; keys.forEach(function(k){ all=all.concat(groups[k]); });
+  if(all.length<10) return null;
+  var gm=mean(all), ssb=0, sst=0;
+  keys.forEach(function(k){ var m=mean(groups[k]); ssb+=groups[k].length*(m-gm)*(m-gm); });
+  all.forEach(function(v){ sst+=(v-gm)*(v-gm); });
+  if(sst<=0) return null;
+  return {eta2:ssb/sst, k:keys.length};
+}
+function analyzeRelations(f){
+  var rels=[], idxs=sampleIdx(f.n, 4000), i, j;
+  var nums=f.cols.filter(function(c){return c.type==='numeric';}).slice(0,8);
+  var cats=f.cols.filter(function(c){return c.type==='categorical';}).slice(0,6);
+  var dts=f.cols.filter(function(c){return c.type==='datetime';});
+  for(i=0;i<nums.length;i++) for(j=i+1;j<nums.length;j++){
+    var a=numVals(f,nums[i].name,idxs), b=numVals(f,nums[j].name,idxs);
+    var n=Math.min(a.length,b.length); if(n<10) continue;
+    var r=pearson(a.slice(0,n),b.slice(0,n));
+    if(isFinite(r)&&Math.abs(r)>=0.6) rels.push({kind:'corr',fileId:f.id,fname:f.name,a:nums[i].name,b:nums[j].name,r:r});
+  }
+  cats.forEach(function(c){
+    if(isIdLike(c.name)) return;
+    var nu=nunique(f,c.name,idxs); if(nu>30||nu<2) return;
+    nums.slice(0,6).forEach(function(nc){
+      var e=eta2(f,c.name,nc.name,idxs);
+      if(e&&e.eta2>=0.14) rels.push({kind:'groupdiff',fileId:f.id,fname:f.name,cat:c.name,num:nc.name,eta2:e.eta2,k:e.k});
+    });
+  });
+  f.cols.forEach(function(c){
+    if(c.type!=='categorical') return;
+    var nu=nunique(f,c.name,idxs);
+    if(idxs.length>20&&nu/idxs.length>0.9) rels.push({kind:'idkey',fileId:f.id,fname:f.name,col:c.name,ratio:nu/idxs.length});
+  });
+  dts.slice(0,2).forEach(function(t){ nums.slice(0,4).forEach(function(nc){
+    rels.push({kind:'trend',fileId:f.id,fname:f.name,t:t.name,num:nc.name});
+  });});
+  var scored=rels.filter(function(r){return r.kind==='corr'||r.kind==='groupdiff';}).sort(function(x,y){
+    var sx=x.kind==='corr'?Math.abs(x.r):x.eta2, sy=y.kind==='corr'?Math.abs(y.r):y.eta2; return sy-sx;
+  }).slice(0,8);
+  var rest=rels.filter(function(r){return r.kind!=='corr'&&r.kind!=='groupdiff';}).slice(0,6);
+  return scored.concat(rest);
+}
+function analyzeCrossFile(){
+  var out=[];
+  for(var i=0;i<S.files.length;i++) for(var j=i+1;j<S.files.length;j++){
+    var a=S.files[i], b=S.files[j], namesA={};
+    a.cols.forEach(function(c){ namesA[c.name]=1; });
+    b.cols.forEach(function(c){ if(namesA[c.name]) out.push({col:c.name, fa:a.name, fb:b.name}); });
+  }
+  return out.slice(0,10);
+}
+function addBtn(box,label,fn){ var b=el('button','btn ghost',label); b.style.margin='2px 4px 2px 0'; b.addEventListener('click',fn); box.appendChild(b); }
+function drawWith(fileId,chart,map){ S.draw.fileId=fileId; S.draw.chart=chart; S.draw.map=map; S.draw.tplId=null; gotoStep(4); }
+function relRow(r){
+  var d=el('div','relrow'), left=el('div','rdesc'), right=el('div');
+  if(r.kind==='corr'){
+    left.innerHTML='<span class="tag num">强相关</span> <code>'+esc(r.fname)+'</code>：<code>'+esc(r.a)+'</code> 与 <code>'+esc(r.b)+'</code> 高度相关（Pearson r='+r.r.toFixed(2)+'），适合散点图看关系。';
+    addBtn(right,'绘制散点图',function(){ drawWith(r.fileId,'scatter',{x:r.a,y:r.b}); });
+  }else if(r.kind==='groupdiff'){
+    left.innerHTML='<span class="tag cat">分组差异显著</span> <code>'+esc(r.fname)+'</code>：按 <code>'+esc(r.cat)+'</code>（'+r.k+' 组）分组，<code>'+esc(r.num)+'</code> 组间差异大（η²='+r.eta2.toFixed(2)+'），适合箱线图 / 均值柱状图对比。';
+    addBtn(right,'箱线图',function(){ drawWith(r.fileId,'boxplot',{group:r.cat,value:r.num}); });
+    addBtn(right,'均值柱状图',function(){ drawWith(r.fileId,'bar-mean',{group:r.cat,value:r.num}); });
+  }else if(r.kind==='trend'){
+    left.innerHTML='<span class="tag dt">时间趋势</span> <code>'+esc(r.fname)+'</code>：<code>'+esc(r.t)+'</code> 为时间列，<code>'+esc(r.num)+'</code> 可沿时间画折线看趋势。';
+    addBtn(right,'绘制折线图',function(){ drawWith(r.fileId,'line',{x:r.t,y:r.num}); });
+  }else if(r.kind==='idkey'){
+    left.innerHTML='<span class="tag warn">疑似 ID 列</span> <code>'+esc(r.fname)+'</code>：<code>'+esc(r.col)+'</code> 唯一值占比 '+Math.round(r.ratio*100)+'%（不直接绘图），可作为多文件关联键。';
+  }
+  d.appendChild(left); d.appendChild(right);
+  return d;
+}
+function renderRelations(){
+  var box=$('relList'); box.innerHTML='';
+  if(!S.files.length){ box.innerHTML='<p class="hint">先在步骤 1 投喂数据。</p>'; return; }
+  var any=false;
+  S.files.forEach(function(f){ analyzeRelations(f).forEach(function(r){ box.appendChild(relRow(r)); any=true; }); });
+  analyzeCrossFile().forEach(function(j){
+    var d=el('div','relrow');
+    d.innerHTML='<div class="rdesc"><span class="tag ok">多文件关联</span> <code>'+esc(j.fa)+'</code> 与 <code>'+esc(j.fb)+'</code> 共有列 <code>'+esc(j.col)+'</code>，可按此列关联两个文件的数据。</div>';
+    box.appendChild(d); any=true;
+  });
+  if(!any) box.innerHTML='<p class="hint">未发现显著关系（|r|≥0.6 或 η²≥0.14）。列之间关系较弱，可直接用上方的图类型推荐绘制。</p>';
+}
+
+/* ================= 论文逻辑 → 数据映射（离线） ================= */
+function normStr(s){ return String(s).toLowerCase().replace(/[_\s\-–—]+/g,''); }
+function parsePaperSteps(text){
+  var lines=String(text).split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
+  var steps=[], cur=null;
+  lines.forEach(function(ln){
+    var m=ln.match(/^(\d+)[.、．:：]\s*(.*)$/)||ln.match(/^(首先|其次|然后|接着|最后|第一步|第二步|第三步|第四步|第五步)[:：,，\s]\s*(.*)$/);
+    if(m){ if(cur) steps.push(cur); cur={head:m[1], text:(m[2]||m[3]||'')}; }
+    else if(cur) cur.text+=' '+ln;
+    else cur={head:'', text:ln};
+  });
+  if(cur) steps.push(cur);
+  return steps.slice(0,20);
+}
+function findMentionedCols(text){
+  var tRaw=String(text).toLowerCase(), tN=normStr(text), hits=[], seen={};
+  S.files.forEach(function(f){ f.cols.forEach(function(c){
+    var key=f.id+'|'+c.name; if(seen[key]) return;
+    var n=normStr(c.name), hit=false;
+    if(n.length>=2){ hit=tN.indexOf(n)>=0; }
+    else if(n.length===1){
+      /* 单字母列名：前后不能是英文字母/数字，避免 a 匹配到 data 里的 a */
+      var escN=n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      hit=new RegExp('(^|[^a-z0-9])'+escN+'([^a-z0-9]|$)').test(tRaw);
+    }
+    if(hit){ seen[key]=1; hits.push({fileId:f.id,fname:f.name,col:c.name,type:c.type}); }
+  });});
+  return hits;
+}
+var TIME_WORDS=/时间|时序|动态|趋势|逐年|逐月|trend|time|dynamic/i;
+var HINT_WORDS=[
+  [/相关|correlation/i,'相关性热图'],
+  [/回归|regression/i,'散点图（回归关系）'],
+  [/差异|比较|对比|compare|difference/i,'箱线图（组间比较）'],
+  [/分布|distribution/i,'直方图（分布）'],
+  [/趋势|trend/i,'折线图（趋势）']
+];
+function suggestForStep(step, hits){
+  var nums=hits.filter(function(h){return h.type==='numeric';});
+  var cats=hits.filter(function(h){return h.type==='categorical';});
+  if(nums.length>=2) return {chart:'scatter', map:{x:nums[0].col,y:nums[1].col}, fileId:nums[0].fileId, label:'散点图'};
+  if(cats.length>=1&&nums.length>=1) return {chart:'boxplot', map:{group:cats[0].col,value:nums[0].col}, fileId:cats[0].fileId, label:'箱线图'};
+  if(nums.length>=1&&TIME_WORDS.test(step.text)){
+    var f=getFile(nums[0].fileId);
+    var dt=f.cols.filter(function(c){return c.type==='datetime';})[0];
+    if(dt) return {chart:'line', map:{x:dt.name,y:nums[0].col}, fileId:f.id, label:'折线图'};
+  }
+  if(nums.length>=1) return {chart:'histogram', map:{value:nums[0].col}, fileId:nums[0].fileId, label:'直方图'};
+  return null;
+}
+function renderPaperMap(){
+  var box=$('paperMap'); box.innerHTML='';
+  var text=(S.paper||'').trim();
+  if(!S.files.length){ box.innerHTML='<p class="hint">先在步骤 1 投喂数据。</p>'; return; }
+  if(!text){ box.innerHTML='<p class="hint">在步骤 1 的「论文原文 / 研究逻辑」里粘贴内容后，这里会自动把每条逻辑映射到你的数据列并推荐贴合的图。</p>'; return; }
+  var hints=HINT_WORDS.filter(function(h){return h[0].test(text);});
+  if(hints.length){
+    var hd=el('div','relrow');
+    hd.innerHTML='<div class="rdesc"><span class="tag num">文本提示</span> 论文中提到：'+hints.map(function(h){return h[1];}).join('、')+'。可结合下方各步骤的映射选择。</div>';
+    box.appendChild(hd);
+  }
+  parsePaperSteps(text).forEach(function(st,i){
+    var hits=findMentionedCols(st.text);
+    var sug=suggestForStep(st, hits);
+    var d=el('div','relrow'), left=el('div','rdesc'), right=el('div');
+    var title=st.head?('步骤 '+esc(st.head)):('第 '+(i+1)+' 条');
+    left.innerHTML='<b style="color:#6B4A2F">'+title+'</b>：'+esc(st.text.slice(0,120))+(st.text.length>120?'…':'')+'<br>'+
+      (hits.length? hits.map(function(h){return '<span class="tag '+(h.type==='numeric'?'num':'cat')+'">'+esc(h.fname)+'：'+esc(h.col)+'</span>';}).join(' ')
+        : '<span class="hint">未匹配到数据列（检查列名是否在文中出现）</span>');
+    if(sug) addBtn(right,'绘制'+sug.label,function(){ drawWith(sug.fileId,sug.chart,sug.map); });
+    d.appendChild(left); d.appendChild(right); box.appendChild(d);
+  });
+}
+
+/* ================= 步骤3：样板图库 ================= */
+function ensureCustomPalOption(){
+  var dp=$('dPal'); if(!dp) return;
+  var has=false;
+  for(var i=0;i<dp.options.length;i++) if(dp.options[i].value==='custom') has=true;
+  if(!has){ var o=document.createElement('option'); o.value='custom'; o.textContent='自定义配色'; dp.appendChild(o); }
+}
+function tplCard(t, sup){
+  var c=el('div','tplcard');
+  var palArr=t.palArr||(t.pal&&PALS[t.pal]);
+  var sw='';
+  if(palArr) sw='<div class="palsw">'+palArr.slice(0,5).map(function(cc){return '<span style="background:'+cc+'"></span>';}).join('')+'</div>';
+  c.innerHTML=t.thumb+'<div class="tname">'+esc(t.name)+'</div>'+sw+
+    '<div class="tstyle">'+esc(t.style)+' ｜ '+esc(t.desc)+'</div>'+
+    (t.custom?'<div><span class="tag num">我的样板</span></div>':'')+
+    (sup[t.chart]?'<div><span class="tag ok">你的数据可支撑</span></div>':'<div><span class="tag warn">当前数据暂不支持</span></div>')+
+    '<div style="margin-top:8px"><button class="btn" '+(sup[t.chart]?'':'disabled')+'>用此样板绘制</button>'+
+    (t.custom?' <button class="btn ghost" data-del="1" style="padding:9px 12px">删除</button>':'')+'</div>';
+  var btns=c.querySelectorAll('button'), btn=btns[0];
+  if(sup[t.chart]) btn.addEventListener('click', function(){
+    var f=S.files[0], r=recommend(f).filter(function(x){return x.chart===t.chart;})[0];
+    S.draw.fileId=f.id; S.draw.chart=t.chart; S.draw.map=r?Object.assign({},r.map):{}; S.draw.tplId=t.id;
+    if(t.custom&&t.palArr){ PALS.custom=t.palArr.slice(0,7); ensureCustomPalOption(); S.style.pal='custom'; if($('dPal')) $('dPal').value='custom'; }
+    else if(t.pal&&PALS[t.pal]){ S.style.pal=t.pal; if($('dPal')) $('dPal').value=t.pal; }
+    if(t.font){ S.style.font=t.font; if($('dFont')) $('dFont').value=t.font; }
+    if(typeof t.grid==='boolean'){ S.style.grid=t.grid; if($('dGrid')) $('dGrid').checked=t.grid; }
+    gotoStep(4);
+  });
+  var del=c.querySelector('[data-del]');
+  if(del) del.addEventListener('click', function(){
+    CUSTOM_TPLS=CUSTOM_TPLS.filter(function(x){return x.id!==t.id;});
+    saveCustomTpls(); renderGallery();
+  });
+  return c;
+}
+function renderGallery(){
+  var g=$('tplGrid'); g.innerHTML='';
+  var sup=supportedCharts(), onlySup=$('fltSupported').checked, fc=$('fltChart').value, fs=$('fltStyle').value;
+  var svn=fs?STYLE_VARIANTS.filter(function(s){return s.id===fs;})[0]:null;
+  function pass(t){
+    if(onlySup && !sup[t.chart]) return false;
+    if(fc && t.chart!==fc) return false;
+    if(fs && !t.custom && t.pal!==fs && (!svn||t.style!==svn.name)) return false;
+    return true;
+  }
+  TEMPLATES.forEach(function(t){ if(pass(t)) g.appendChild(tplCard(t, sup)); });
+  CUSTOM_TPLS.forEach(function(t){ if(pass(t)) g.appendChild(tplCard(t, sup)); });
+  if(!g.children.length) g.innerHTML='<p class="hint">没有匹配的样板。先投喂数据，或调整筛选。</p>';
+}
+$('fltSupported').addEventListener('change', renderGallery);
+$('fltChart').addEventListener('change', renderGallery);
+$('fltStyle').addEventListener('change', renderGallery);
+(function(){ var s=$('fltChart'); Object.keys(CHARTS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=CHARTS[k].name; s.appendChild(o); }); })();
+(function(){ var s=$('fltStyle'); STYLE_VARIANTS.forEach(function(v){ var o=document.createElement('option'); o.value=v.id; o.textContent=v.name; s.appendChild(o); }); })();
+$('btnImportTpl').addEventListener('click', function(){ $('tplInput').click(); });
+$('tplInput').addEventListener('change', function(){
+  var f=this.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var arr=JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw 0;
+      var n=0;
+      arr.forEach(function(t){
+        if(t&&t.id&&t.name&&t.chart&&CHARTS[t.chart]&&t.thumb){
+          if(!TEMPLATES.some(function(x){return x.id===t.id;})){ TEMPLATES.push({id:t.id,name:t.name,chart:t.chart,style:t.style||'外部导入',desc:t.desc||'',thumb:t.thumb}); n++; }
+        }
+      });
+      renderGallery();
+      alert('导入 '+n+' 个样板');
+    }catch(e){ alert('JSON 解析失败：需要数组，每项含 id/name/chart/thumb'); }
+  };
+  r.readAsText(f); this.value='';
+});
+
+/* ================= 论文配图灵感（顶会画廊 3516 张，按需加载） ================= */
+var INS={data:null, shown:0, page:60, base:'https://qwdwqfwq.github.io/topconf-paper-figure-gallery/'};
+function insFiltered(){
+  var v=$('insVenue').value, p=$('insPattern').value, q=$('insQ').value.trim().toLowerCase();
+  return INS.data.filter(function(x){
+    return (!v||x.venue===v)&&(!p||x.pattern===p)&&(!q||(x.title||'').toLowerCase().indexOf(q)>=0);
+  });
+}
+function renderInspire(reset){
+  var g=$('insGrid'); if(reset){ g.innerHTML=''; INS.shown=0; }
+  var list=insFiltered(), n=Math.min(INS.shown+INS.page, list.length), i;
+  for(i=INS.shown;i<n;i++){ var x=list[i];
+    var c=el('div','tplcard');
+    c.innerHTML='<img class="inspire" loading="lazy" src="'+INS.base+x.image+'" alt="">'+
+      '<div class="tname" style="font-size:12.5px"><a href="'+esc(x.paper||'#')+'" target="_blank" rel="noopener">'+esc(x.title||x.id)+'</a></div>'+
+      '<div class="tstyle">'+esc((x.venue||'').toUpperCase())+' '+(x.year||'')+' ｜ '+esc(x.pattern||'')+'</div>';
+    g.appendChild(c);
+  }
+  INS.shown=n;
+  $('insMore').style.display=INS.shown<list.length?'':'none';
+  $('insMsg').innerHTML='<p class="hint">共 '+list.length+' 张（索引 '+INS.data.length+' 张）。概念图/框架图为主，仅作视觉灵感参考。</p>';
+}
+$('btnInspire').addEventListener('click', async function(){
+  if(INS.data){ renderInspire(true); return; }
+  $('insMsg').innerHTML='<p class="hint">加载索引中（约 2.2MB）…</p>';
+  try{
+    var r=await fetch(INS.base+'data/figures.json'); if(!r.ok) throw new Error('HTTP '+r.status);
+    INS.data=await r.json();
+    var vs={}, ps={};
+    INS.data.forEach(function(x){ if(x.venue)vs[x.venue]=1; if(x.pattern)ps[x.pattern]=1; });
+    Object.keys(vs).sort().forEach(function(v){ var o=document.createElement('option'); o.value=v; o.textContent=v.toUpperCase(); $('insVenue').appendChild(o); });
+    Object.keys(ps).sort().forEach(function(p){ var o=document.createElement('option'); o.value=p; o.textContent=p; $('insPattern').appendChild(o); });
+    renderInspire(true);
+  }catch(e){ $('insMsg').innerHTML='<div class="err">加载失败：'+esc(e.message)+'。检查网络后重试（github.io 需可访问）。</div>'; }
+});
+$('insMore').addEventListener('click', function(){ renderInspire(false); });
+['insVenue','insPattern'].forEach(function(id){ $(id).addEventListener('change', function(){ if(INS.data) renderInspire(true); }); });
+$('insQ').addEventListener('input', function(){ if(INS.data) renderInspire(true); });
+
+/* ================= 我的样板：从图片创建 / 手动创建 ================= */
+var CUSTOM_TPLS=[];
+function loadCustomTpls(){ try{ CUSTOM_TPLS=JSON.parse(localStorage.getItem('nike_custom_tpls')||'[]'); }catch(e){ CUSTOM_TPLS=[]; } }
+function saveCustomTpls(){ try{ localStorage.setItem('nike_custom_tpls', JSON.stringify(CUSTOM_TPLS)); }catch(e){} }
+loadCustomTpls();
+function baseThumbFor(chart){
+  var b=BASE_TPLS.filter(function(x){return x.chart===chart;})[0];
+  return b?b.thumbFn():'';
+}
+function mkPalette(){
+  var p=[];
+  document.querySelectorAll('#mkColors input[type=color]').forEach(function(i){ p.push(i.value); });
+  return p;
+}
+function mkPreview(){
+  var chart=$('mkChart').value;
+  $('mkThumb').innerHTML=recolorThumb(baseThumbFor(chart), mkPalette());
+}
+function mkOpen(mode){
+  $('tplMaker').style.display='block';
+  $('mkTitle').textContent=mode==='img'?'从图片创建样板':'手动创建样板';
+  $('mkAiRow').style.display=mode==='img'?'':'none';
+  $('mkMsg').textContent='';
+  var mc=$('mkChart'); mc.innerHTML='';
+  Object.keys(CHARTS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=CHARTS[k].name; mc.appendChild(o); });
+  var cc=$('mkColors'); cc.innerHTML='<span class="hint">配色：</span>';
+  PALS.academic.slice(0,6).forEach(function(c){
+    var i=document.createElement('input'); i.type='color'; i.value=c;
+    i.style.cssText='width:34px;height:26px;border:1px solid #EAD3B8;border-radius:6px;padding:0;background:#fff;cursor:pointer';
+    i.addEventListener('input', mkPreview); cc.appendChild(i);
+  });
+  mc.addEventListener('change', mkPreview);
+  mkPreview();
+  $('tplMaker').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function mkLoadImage(file){
+  var r=new FileReader();
+  r.onload=function(){
+    downscaleDataURL(r.result, 1024).then(function(d){
+      $('mkImg').src=d; $('mkImg').style.display='block'; $('mkImg').dataset.raw=d;
+      $('mkMsg').textContent='图片已载入，点"AI 解析风格"。';
+    });
+  };
+  r.readAsDataURL(file);
+}
+function downscaleDataURL(dataUrl, maxW){
+  return new Promise(function(res, rej){
+    var img=new Image();
+    img.onload=function(){
+      var s=Math.min(1, maxW/img.width);
+      var cv=document.createElement('canvas');
+      cv.width=Math.max(1,Math.round(img.width*s)); cv.height=Math.max(1,Math.round(img.height*s));
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      res(cv.toDataURL('image/jpeg',0.85));
+    };
+    img.onerror=rej; img.src=dataUrl;
+  });
+}
+$('btnTplFromImg').addEventListener('click', function(){ mkOpen('img'); $('tplImgInput').click(); });
+$('btnTplManual').addEventListener('click', function(){ mkOpen('manual'); $('mkImg').style.display='none'; });
+$('tplImgInput').addEventListener('change', function(){ if(this.files[0]) mkLoadImage(this.files[0]); this.value=''; });
+$('mkCancel').addEventListener('click', function(){ $('tplMaker').style.display='none'; });
+$('mkParse').addEventListener('click', async function(){
+  var d=$('mkImg').dataset.raw;
+  if(!d){ $('mkMsg').textContent='先选择或粘贴一张期刊图。'; return; }
+  $('mkMsg').textContent='AI 解析中…';
+  try{
+    var sys='你是科研配图样式专家。看这张期刊结果图，提取可复用的样式方案。只输出 JSON：{"palette":["#hex","#hex","#hex","#hex","#hex"],"font":"serif 或 sans","grid":true/false,"styleName":"4-8字风格名","desc":"一句话描述"}，不要其他文字。要求：palette 取图中最具代表性的 5-7 个颜色；font 看标题坐标轴是衬线还是无衬线；grid 看有无网格线。';
+    var raw=await callChat([{role:'system',content:sys},
+      {role:'user',content:[{type:'text',text:'分析这张图的配色与样式。'},{type:'image_url',image_url:{url:d}}]}],
+      {vision:true, maxTokens:800});
+    var j=extractJSON(raw);
+    if(j.palette&&j.palette.length>=3){
+      var inputs=document.querySelectorAll('#mkColors input[type=color]');
+      j.palette.slice(0,inputs.length).forEach(function(c,i){
+        if(/^#[0-9a-fA-F]{6}$/.test(c)) inputs[i].value=c;
+      });
+    }
+    if(j.font==='serif'||j.font==='sans') $('mkFont').value=j.font;
+    if(typeof j.grid==='boolean') $('mkGrid').checked=j.grid;
+    if(j.styleName) $('mkName').value=String(j.styleName).slice(0,20);
+    mkPreview();
+    $('mkMsg').textContent='解析完成'+(j.desc?('：'+j.desc):'')+'，检查无误后点保存。';
+  }catch(e){ $('mkMsg').textContent=apiError(e); }
+});
+$('mkSave').addEventListener('click', function(){
+  var name=$('mkName').value.trim(), chart=$('mkChart').value;
+  if(!name){ $('mkMsg').textContent='起个名字再保存。'; $('mkName').focus(); return; }
+  if(!CHARTS[chart]){ $('mkMsg').textContent='先选图类型。'; return; }
+  var pal=mkPalette();
+  CUSTOM_TPLS.push({id:'c-'+Date.now(), name:name, chart:chart, style:'我的样板',
+    desc:'自定义样板', palArr:pal, font:$('mkFont').value, grid:$('mkGrid').checked,
+    thumb:recolorThumb(baseThumbFor(chart), pal), custom:true});
+  saveCustomTpls(); renderGallery();
+  $('tplMaker').style.display='none';
+  $('mkName').value='';
+});
+/* 样板包导出 / 导入 */
+$('btnTplExport').addEventListener('click', function(){
+  if(!CUSTOM_TPLS.length){ alert('还没有自定义样板。'); return; }
+  dl(URL.createObjectURL(new Blob([JSON.stringify(CUSTOM_TPLS,null,2)],{type:'application/json'})), 'nike_templates_'+Date.now()+'.json');
+});
+$('btnTplPackBtn').addEventListener('click', function(){ $('tplPackInput').click(); });
+$('tplPackInput').addEventListener('change', function(){
+  var f=this.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var arr=JSON.parse(r.result); if(!Array.isArray(arr)) throw 0;
+      var n=0;
+      arr.forEach(function(t){
+        if(t&&t.name&&t.chart&&CHARTS[t.chart]&&(t.thumb||t.palArr)){
+          if(!CUSTOM_TPLS.some(function(x){return x.id===t.id;})&&!TEMPLATES.some(function(x){return x.id===t.id;})){
+            CUSTOM_TPLS.push({id:t.id||('c-'+Date.now()+n), name:t.name, chart:t.chart, style:'我的样板',
+              desc:t.desc||'导入', palArr:t.palArr||PALS.academic.slice(0,6), font:t.font||'serif',
+              grid:typeof t.grid==='boolean'?t.grid:true,
+              thumb:t.thumb||recolorThumb(baseThumbFor(t.chart), t.palArr||PALS.academic.slice(0,6)), custom:true});
+            n++;
+          }
+        }
+      });
+      saveCustomTpls(); renderGallery();
+      alert('导入 '+n+' 个样板');
+    }catch(e){ alert('样板包解析失败：需要数组，每项含 name/chart/thumb 或 palArr'); }
+  };
+  r.readAsText(f); this.value='';
+});
+
+/* ================= 步骤4：绘制 ================= */
+var chart=null;
+function pal(){ return PALS[S.style.pal]; }
+function fontFam(){ return S.style.font==='serif' ? "'Times New Roman',Georgia,serif" : "'Helvetica Neue',Arial,sans-serif"; }
+function baseOpt(){
+  return {
+    textStyle:{fontFamily:fontFam(), fontSize:12},
+    grid:{left:64,right:30,top:52,bottom:48},
+    tooltip:{trigger:'axis'},
+    title:{text:S.style.title||'', left:'center', textStyle:{fontFamily:fontFam(), fontSize:15, fontWeight:'bold'}}
+  };
+}
+function axisCommon(name){
+  return {name:name, nameLocation:'middle', nameGap:34, nameTextStyle:{fontFamily:fontFam(), fontSize:12},
+    axisLine:{show:true}, splitLine:{show:S.style.grid, lineStyle:{color:'#e6ecef'}}};
+}
+function colNums(f,col){ var a=[]; f.rows.forEach(function(r){ var v=num(r[col]); if(isFinite(v)) a.push(v); }); return a; }
+
+var RENDER={
+ 'scatter':function(f,m){
+   var d=[]; f.rows.forEach(function(r){ var x=num(r[m.x]),y=num(r[m.y]); if(isFinite(x)&&isFinite(y)) d.push([x,y]); });
+   var o=baseOpt(); o.tooltip={trigger:'item'};
+   o.xAxis=axisCommon(m.x); o.xAxis.type='value';
+   o.yAxis=axisCommon(m.y); o.yAxis.type='value';
+   o.series=[{type:'scatter', symbolSize:9, data:d, itemStyle:{color:pal()[0], opacity:0.8}}];
+   return o;
+ },
+ 'grouped-scatter':function(f,m){
+   var gs={}; f.rows.forEach(function(r){ var x=num(r[m.x]),y=num(r[m.y]); if(!isFinite(x)||!isFinite(y))return; var g=r[m.group]; (gs[g]=gs[g]||[]).push([x,y]); });
+   var o=baseOpt(); o.tooltip={trigger:'item'};
+   o.xAxis=axisCommon(m.x); o.xAxis.type='value';
+   o.yAxis=axisCommon(m.y); o.yAxis.type='value';
+   var P=pal(), i=0;
+   o.series=Object.keys(gs).map(function(g){ return {name:g, type:'scatter', symbolSize:9, data:gs[g], itemStyle:{color:P[(i++)%P.length], opacity:0.8}}; });
+   o.legend={top:28, textStyle:{fontFamily:fontFam()}};
+   return o;
+ },
+ 'boxplot':function(f,m){
+   var gs={}; f.rows.forEach(function(r){ var v=num(r[m.value]); if(!isFinite(v))return; var g=r[m.group]; (gs[g]=gs[g]||[]).push(v); });
+   var cats=Object.keys(gs), data=cats.map(function(g){ var s=gs[g].slice().sort(function(a,b){return a-b;});
+     return [s[0], quant(s,0.25), quant(s,0.5), quant(s,0.75), s[s.length-1]]; });
+   var o=baseOpt(); o.tooltip={trigger:'item', formatter:function(p){ var d=p.data; return p.name+'<br>min '+d[0].toFixed(2)+'<br>Q1 '+d[1].toFixed(2)+'<br>median '+d[2].toFixed(2)+'<br>Q3 '+d[3].toFixed(2)+'<br>max '+d[4].toFixed(2); }};
+   o.xAxis={type:'category', data:cats, axisLine:{show:true}, splitLine:{show:false}, axisLabel:{fontFamily:fontFam()}};
+   o.yAxis=axisCommon(m.value); o.yAxis.type='value';
+   o.series=[{type:'boxplot', data:data, itemStyle:{color:pal()[0], borderColor:'#2b3a42'}, boxWidth:[20,44]}];
+   return o;
+ },
+ 'bar-mean':function(f,m){
+   var gs={}; f.rows.forEach(function(r){ var v=num(r[m.value]); if(!isFinite(v))return; var g=r[m.group]; (gs[g]=gs[g]||[]).push(v); });
+   var cats=Object.keys(gs), means=cats.map(function(g){return +mean(gs[g]).toFixed(3);});
+   var o=baseOpt();
+   o.xAxis={type:'category', data:cats, axisLine:{show:true}, splitLine:{show:false}, axisLabel:{fontFamily:fontFam()}};
+   o.yAxis=axisCommon('mean '+m.value); o.yAxis.type='value';
+   o.series=[{type:'bar', data:means, itemStyle:{color:pal()[0]}, barWidth:'55%',
+     label:{show:true, position:'top', fontFamily:fontFam(), fontSize:10}}];
+   o.tooltip.formatter=function(p){ var g=gs[p.name]; return p.name+'<br>mean '+p.value+'<br>n='+g.length+' sd='+sd(g).toFixed(2); };
+   return o;
+ },
+ 'grouped-bar':function(f,m){
+   var gs={}, subs={};
+   f.rows.forEach(function(r){ var v=num(r[m.value]); if(!isFinite(v))return; var g=r[m.group], s=r[m.sub]; subs[s]=1; var k=g+'||'+s; (gs[k]=gs[k]||[]).push(v); });
+   var cats=Object.keys({}), subList=Object.keys(subs), P=pal();
+   f.rows.forEach(function(r){ if(cats.indexOf(r[m.group])<0) cats.push(r[m.group]); });
+   var o=baseOpt();
+   o.xAxis={type:'category', data:cats, axisLine:{show:true}, splitLine:{show:false}, axisLabel:{fontFamily:fontFam()}};
+   o.yAxis=axisCommon('mean '+m.value); o.yAxis.type='value';
+   o.series=subList.map(function(s,si){ return {name:s, type:'bar',
+     data:cats.map(function(g){ var a=gs[g+'||'+s]; return a?+mean(a).toFixed(3):0; }),
+     itemStyle:{color:P[si%P.length]}}; });
+   o.legend={top:28, textStyle:{fontFamily:fontFam()}};
+   return o;
+ },
+ 'heatmap-corr':function(f,m){
+   var nums=f.cols.filter(function(c){return c.type==='numeric';}).map(function(c){return c.name;}).slice(0,12);
+   var vecs=nums.map(function(c){return colNums(f,c);});
+   var data=[];
+   for(var i=0;i<nums.length;i++) for(var j=0;j<nums.length;j++){
+     var v=(i===j)?1:pearson(vecs[i],vecs[j]); data.push([i,j,isFinite(v)?+v.toFixed(3):0]);
+   }
+   var o=baseOpt(); o.tooltip={formatter:function(p){ return nums[p.value[0]]+' × '+nums[p.value[1]]+'<br>r = '+p.value[2]; }};
+   o.xAxis={type:'category', data:nums, splitArea:{show:true}, axisLabel:{fontFamily:fontFam(), rotate:30}};
+   o.yAxis={type:'category', data:nums.slice().reverse(), splitArea:{show:true}, axisLabel:{fontFamily:fontFam()}};
+   var rev=data.map(function(d){ return [d[0], nums.length-1-d[1], d[2]]; });
+   o.visualMap={min:-1,max:1,calculable:true,orient:'vertical',right:8,top:'middle',
+     inRange:{color:['#1f6fb2','#dbe9f6','#f5f5f5','#f0c8c0','#c0392b']}};
+   o.series=[{type:'heatmap', data:rev, label:{show:true, fontSize:9, fontFamily:fontFam()}}];
+   return o;
+ },
+ 'line':function(f,m){
+   var pts=[]; f.rows.forEach(function(r){ var x=r[m.x], y=num(r[m.y]); if(y!==''&&isFinite(y)) pts.push({x:x,y:y}); });
+   pts.sort(function(a,b){ var na=num(a.x),nb=num(b.x); return (isFinite(na)&&isFinite(nb))?(na-nb):String(a.x).localeCompare(String(b.x)); });
+   var o=baseOpt();
+   o.xAxis={type:'category', data:pts.map(function(p){return p.x;}), axisLine:{show:true}, splitLine:{show:false}, axisLabel:{fontFamily:fontFam()}};
+   o.xAxis.name=m.x; o.xAxis.nameLocation='middle'; o.xAxis.nameGap=30;
+   o.yAxis=axisCommon(m.y); o.yAxis.type='value';
+   o.series=[{type:'line', data:pts.map(function(p){return p.y;}), itemStyle:{color:pal()[0]}, lineStyle:{width:2.5}, symbol:'circle', symbolSize:7}];
+   return o;
+ },
+ 'histogram':function(f,m){
+   var v=colNums(f,m.value), bins=histBins(v, Math.min(30,Math.max(8,Math.round(1+3.322*Math.log10(v.length+1)))));
+   var o=baseOpt();
+   o.xAxis={type:'category', data:bins.map(function(b){return b.x0.toFixed(1)+'-'+b.x1.toFixed(1);}), axisLine:{show:true}, splitLine:{show:false}, axisLabel:{fontFamily:fontFam(), rotate:30, fontSize:9}};
+   o.xAxis.name=m.value; o.xAxis.nameLocation='middle'; o.xAxis.nameGap=44;
+   o.yAxis=axisCommon('count'); o.yAxis.type='value';
+   o.series=[{type:'bar', data:bins.map(function(b){return b.c;}), itemStyle:{color:pal()[1]}, barWidth:'92%'}];
+   return o;
+ },
+ 'bubble':function(f,m){
+   var d=[], zs=[]; f.rows.forEach(function(r){ var x=num(r[m.x]),y=num(r[m.y]),z=num(r[m.size]); if(isFinite(x)&&isFinite(y)&&isFinite(z)){d.push([x,y,z]);zs.push(z);} });
+   var lo=Math.min.apply(null,zs), hi=Math.max.apply(null,zs);
+   var o=baseOpt(); o.tooltip={trigger:'item', formatter:function(p){ return m.x+' '+p.value[0]+'<br>'+m.y+' '+p.value[1]+'<br>'+m.size+' '+p.value[2]; }};
+   o.xAxis=axisCommon(m.x); o.xAxis.type='value';
+   o.yAxis=axisCommon(m.y); o.yAxis.type='value';
+   o.series=[{type:'scatter', data:d, itemStyle:{color:pal()[0], opacity:0.65},
+     symbolSize:function(v){ return hi>lo? 6+34*(v[2]-lo)/(hi-lo) : 12; }}];
+   return o;
+ },
+ 'forest':function(f,m){
+   var labels=[], rows=[];
+   f.rows.forEach(function(r){ var e=num(r[m.est]),lo=num(r[m.lo]),hi=num(r[m.hi]); if(isFinite(e)&&isFinite(lo)&&isFinite(hi)){ labels.push(r[m.label]); rows.push([lo,hi,r[m.label],e]); } });
+   var o=baseOpt(); o.tooltip={trigger:'item'};
+   o.xAxis=axisCommon('estimate [95% CI]'); o.xAxis.type='value';
+   o.yAxis={type:'category', data:labels, inverse:true, axisLine:{show:true}, splitLine:{show:false}, axisLabel:{fontFamily:fontFam()}};
+   o.series=[
+     {type:'scatter', data:rows.map(function(r){return [r[3],r[2]];}), symbolSize:10, itemStyle:{color:pal()[0]}, tooltip:{formatter:function(p){ var i=labels.indexOf(p.value[1]); var r=rows[i]; return p.value[1]+'<br>'+r[3]+' ['+r[0]+', '+r[1]+']'; }}},
+     {type:'custom', data:rows, renderItem:function(params,api){
+        var lo=api.value(0), hi=api.value(1), cat=api.value(2);
+        var p1=api.coord([lo,cat]), p2=api.coord([hi,cat]);
+        return {type:'group', children:[
+          {type:'line', shape:{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1]}, style:{stroke:pal()[0], lineWidth:3}},
+          {type:'line', shape:{x1:p1[0],y1:p1[1]-6,x2:p1[0],y2:p1[1]+6}, style:{stroke:pal()[0], lineWidth:3}},
+          {type:'line', shape:{x1:p2[0],y1:p2[1]-6,x2:p2[0],y2:p2[1]+6}, style:{stroke:pal()[0], lineWidth:3}}
+        ]};
+      }, tooltip:{show:false}}
+   ];
+   o.series[0].markLine={silent:true, symbol:'none', lineStyle:{color:'#999', type:'dashed'}, data:[{xAxis:0}], label:{formatter:'0', fontFamily:fontFam()}};
+   return o;
+ }
+};
+
+/* ================= 步骤4：绘制装配 ================= */
+function getFile(id){ return S.files.filter(function(f){return f.id===id;})[0]; }
+function renderDraw(){
+  if(typeof echarts==='undefined'){ $('drawMsg').textContent='ECharts 未加载（需要联网）。'; return; }
+  var fs=$('dFile'), cs=$('dChart');
+  fs.innerHTML=''; cs.innerHTML='';
+  if(!S.files.length){ $('drawMsg').textContent='先在步骤 1 投喂数据。'; return; }
+  S.files.forEach(function(f){ var o=document.createElement('option'); o.value=f.id; o.textContent=f.name+'（'+f.n+'行）'; fs.appendChild(o); });
+  var sup=supportedCharts();
+  Object.keys(CHARTS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=CHARTS[k].name+(sup[k]?'':'（数据暂不支持）'); cs.appendChild(o); });
+  if(S.draw.fileId && getFile(S.draw.fileId)) fs.value=S.draw.fileId;
+  if(S.draw.chart) cs.value=S.draw.chart;
+  S.draw.fileId=fs.value; S.draw.chart=cs.value;
+  buildMapUI(); drawChart();
+}
+$('dFile').addEventListener('change', function(){ S.draw.fileId=this.value; var f=getFile(this.value); var r=recommend(f).filter(function(x){return x.chart===S.draw.chart;})[0]; S.draw.map=r?Object.assign({},r.map):{}; buildMapUI(); drawChart(); });
+$('dChart').addEventListener('change', function(){ S.draw.chart=this.value; var f=getFile(S.draw.fileId); var r=recommend(f).filter(function(x){return x.chart===this.value;})[0]; S.draw.map=r?Object.assign({},r.map):{}; buildMapUI(); drawChart(); });
+function buildMapUI(){
+  var box=$('dMap'); box.innerHTML='';
+  var f=getFile(S.draw.fileId); if(!f) return;
+  var need=CHARTS[S.draw.chart].need;
+  if(!need.length){ box.innerHTML='<span class="hint">此图无需列映射（使用全部数值列）。</span>'; return; }
+  need.forEach(function(k){
+    var lab=el('label',null,esc(MAP_LABEL[k]||k)+' ');
+    var sel=document.createElement('select'); sel.dataset.k=k;
+    f.cols.forEach(function(c){
+      var ok=(k==='group'||k==='sub'||k==='label') ? (c.type!=='numeric') : (c.type==='numeric');
+      if(!ok && !(k==='x'&&c.type==='datetime')) { /* 仍列出但置后 */ }
+      var o=document.createElement('option'); o.value=c.name; o.textContent=c.name+'（'+(c.type==='numeric'?'数值':c.type==='datetime'?'时间':'分类')+'）';
+      sel.appendChild(o);
+    });
+    if(S.draw.map[k]) sel.value=S.draw.map[k];
+    S.draw.map[k]=sel.value;
+    sel.addEventListener('change', function(){ S.draw.map[this.dataset.k]=this.value; drawChart(); });
+    lab.appendChild(sel); box.appendChild(lab);
+  });
+}
+function drawChart(){
+  var f=getFile(S.draw.fileId); if(!f) return;
+  $('drawMsg').textContent='';
+  if(!chart) chart=echarts.init($('chartDiv'), null, {renderer:'svg'});
+  try{
+    var o=RENDER[S.draw.chart](f, S.draw.map);
+    chart.setOption(o, true);
+    var n=o.series.reduce(function(s,x){return s+(x.data?x.data.length:0);},0);
+    $('drawMsg').textContent='已渲染 '+n+' 个数据点 · 全部来自 '+f.name;
+  }catch(e){ $('drawMsg').textContent='渲染出错：'+e.message; }
+}
+['dPal','dFont','dGrid','dTitle'].forEach(function(id){
+  $(id).addEventListener('change', function(){
+    S.style.pal=$('dPal').value; S.style.font=$('dFont').value;
+    S.style.grid=$('dGrid').checked; S.style.title=$('dTitle').value.trim();
+    drawChart();
+  });
+});
+function dl(url, name){ var a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){document.body.removeChild(a);},400); }
+function stamp(){ var d=new Date(), p=function(n){return (n<10?'0':'')+n;}; return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes()); }
+$('btnSVG').addEventListener('click', function(){
+  if(!chart) return;
+  var svg=$('chartDiv').querySelector('svg'); if(!svg){ alert('未找到 SVG'); return; }
+  var c=svg.cloneNode(true); c.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  var s=new XMLSerializer().serializeToString(c);
+  dl(URL.createObjectURL(new Blob([s],{type:'image/svg+xml'})), 'nike_'+S.draw.chart+'_'+stamp()+'.svg');
+});
+$('btnPNG').addEventListener('click', function(){
+  if(!chart) return;
+  var svg=$('chartDiv').querySelector('svg'); if(!svg){ alert('未找到 SVG'); return; }
+  var c=svg.cloneNode(true); c.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  var s=new XMLSerializer().serializeToString(c);
+  var img=new Image();
+  img.onload=function(){
+    var w=1200, h=Math.round(1200*540/960), cv=document.createElement('canvas');
+    cv.width=w*3; cv.height=h*3;
+    var ctx=cv.getContext('2d'); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.drawImage(img,0,0,cv.width,cv.height);
+    cv.toBlob(function(b){ dl(URL.createObjectURL(b), 'nike_'+S.draw.chart+'_'+stamp()+'.png'); });
+  };
+  img.onerror=function(){ alert('PNG 导出失败，请改用 SVG'); };
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+});
+window.addEventListener('resize', function(){ if(chart) chart.resize(); });
+
+/* ================= 初始化 ================= */
+renderFiles();
+if(typeof echarts==='undefined'||typeof JSZip==='undefined'){
+  msg('dzMsg','注意：ECharts / JSZip 通过 CDN 加载，离线时部分功能不可用。','');
+}
+
+/* ================= v2：API 集成（AI 增强） ================= */
+renderFiles();
+if(typeof echarts==='undefined'||typeof JSZip==='undefined'){
+  msg('dzMsg','注意：ECharts / JSZip 通过 CDN 加载，离线时部分功能不可用。','');
+}
+(function(){
+/* ---- API 配置（localStorage，只存本机） ---- */
+function apiGet(){ try{ return JSON.parse(localStorage.getItem('nike_api')||'{}'); }catch(e){ return {}; } }
+function apiSet(c){ localStorage.setItem('nike_api', JSON.stringify(c)); }
+/* Key 清洗（借自 FigureForge）：粘贴的 Key 常带看不见的换行/空格，全部去掉 */
+function cleanKey(s){ return (s||'').replace(/\s+/g,''); }
+
+var apiCard=document.createElement('div');
+apiCard.className='card';
+/* ---- 服务商预设 + 内置模型清单（拉取失败时降级用，思路借自 FigureForge） ---- */
+var FS_PROVIDERS={
+  sf:{label:'硅基流动 SiliconFlow', base:'https://api.siliconflow.cn/v1',
+      chat:['deepseek-ai/DeepSeek-V3','Qwen/Qwen3-235B-A22B','Qwen/Qwen3-32B','THUDM/GLM-4.5'],
+      vision:['Qwen/Qwen2.5-VL-72B-Instruct','Qwen/Qwen2-VL-72B-Instruct']},
+  ds:{label:'DeepSeek 官方', base:'https://api.deepseek.com',
+      chat:['deepseek-chat','deepseek-reasoner'], vision:[]},
+  ark:{label:'火山方舟 Ark', base:'https://ark.cn-beijing.volces.com/api/v3',
+      chat:['doubao-seed-1-6-251015','doubao-seed-1-6-lite-251015'],
+      vision:['doubao-seed-1-6-251015','doubao-seed-1-6-lite-251015']},
+  glm:{label:'智谱 GLM', base:'https://open.bigmodel.cn/api/paas/v4',
+      chat:['glm-4.5','glm-4.5-air','glm-4.6'], vision:['glm-4v-plus','glm-4.6v']},
+  kimi:{label:'Kimi 月之暗面', base:'https://api.moonshot.cn/v1',
+      chat:['kimi-k2-0905','kimi-k2-turbo'], vision:['kimi-k2-0905']},
+  qwen:{label:'通义千问', base:'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      chat:['qwen-max','qwen-plus'], vision:['qwen-vl-max','qwen-vl-plus']},
+  custom:{label:'自定义 / 中转站', base:'', chat:[], vision:[]}
+};
+function fsProvider(){ return FS_PROVIDERS[$('apiProvider').value]||FS_PROVIDERS.custom; }
+function isVisionId(id, pv){
+  return /(^|[^a-z])vl([^a-z]|$)|vision|visual|multimodal/i.test(id)||(pv&&pv.indexOf(id)>=0);
+}
+function isImageId(id){
+  return /flux|kolors|schnell|seedream|cogview|[^a-z]image/i.test(id);
+}
+/* 渲染模型下拉框：优先"实时拉取"，失败则只用内置清单（永远不报错） */
+function renderModelSels(liveIds){
+  var p=fsProvider();
+  [['apiChatSel','apiChatModel',false],['apiVisionSel','apiVisionModel',true]].forEach(function(cf){
+    var sel=$(cf[0]), cur=$(cf[1]).value.trim(), isVis=cf[2];
+    sel.innerHTML='';
+    var o0=document.createElement('option'); o0.value=''; o0.textContent='— 从列表选择 —'; sel.appendChild(o0);
+    if(liveIds&&liveIds.length){
+      var g=document.createElement('optgroup');
+      g.label='你的账号已开通（实时拉取 '+new Date().toLocaleDateString()+'）';
+      var seen={};
+      liveIds.forEach(function(id){
+        if(seen[id]) return; seen[id]=1;
+        if(isVis ? !isVisionId(id,p.vision) : isImageId(id)) return;
+        var o=document.createElement('option'); o.value=id; o.textContent=id; g.appendChild(o);
+      });
+      if(g.children.length) sel.appendChild(g);
+    }
+    var list=isVis?p.vision:p.chat;
+    if(list&&list.length){
+      var g2=document.createElement('optgroup'); g2.label=isVis?'推荐视觉模型（内置清单）':'推荐对话模型（内置清单）';
+      list.forEach(function(id){ var o=document.createElement('option'); o.value=id; o.textContent=id; g2.appendChild(o); });
+      sel.appendChild(g2);
+    }
+    sel.style.display='';
+    if(cur){ for(var i=0;i<sel.options.length;i++) if(sel.options[i].value===cur){ sel.selectedIndex=i; break; } }
+    sel.onchange=function(){ if(this.value) $(cf[1]).value=this.value; };
+  });
+}
+
+apiCard.innerHTML='<h2>API 设置 <span class="hint">（可选，用于 AI 增强功能；Key 只保存在本浏览器）</span></h2>'+
+ '<div class="ctl"><label>服务商 <select id="apiProvider" style="max-width:220px"></select></label>'+
+ '<span class="hint">点选自动填 Base URL；中转站选"自定义"</span></div>'+
+ '<div class="ctl"><label>Base URL <input type="text" id="apiBase" placeholder="https://..." style="width:260px"></label>'+
+ '<label>API Key <input type="password" id="apiKey" placeholder="sk-..." style="width:200px"></label></div>'+
+ '<div class="ctl"><label>备用 Base URL <input type="text" id="apiBase2" placeholder="（可选）第二线路" style="width:260px"></label>'+
+ '<label>备用 API Key <input type="password" id="apiKey2" placeholder="（可选）" style="width:200px"></label></div>'+
+ '<div class="ctl"><label>对话模型 <input type="text" id="apiChatModel" placeholder="手动输入，或从右侧下拉选择" style="width:240px"></label>'+
+ '<select id="apiChatSel" style="max-width:260px"><option value="">— 从列表选择 —</option></select></div>'+
+ '<div class="ctl"><label>视觉模型 <input type="text" id="apiVisionModel" placeholder="手动输入，或从右侧下拉选择" style="width:240px"></label>'+
+ '<select id="apiVisionSel" style="max-width:260px"><option value="">— 从列表选择 —</option></select>'+
+ '<button class="btn ghost" id="apiFetchModels">拉取模型列表</button> '+
+ '<button class="btn ghost" id="apiDiag">网络诊断</button></div>'+
+ '<div><button class="btn" id="apiSave">保存</button> <button class="btn ghost" id="apiTest">测试连接</button> '+
+ '<span class="hint" id="apiMsg"></span></div>'+
+ '<p class="hint" style="margin-top:8px">说明：AI 功能只把<b>列名、列类型、汇总统计量</b>发给模型，原始数据行不出浏览器。接口为 OpenAI 兼容格式（/chat/completions）。支持主/备用双线路，某条网络不通自动换另一条（VPN 开关都不影响）。</p>';
+$('step1').insertBefore(apiCard, $('step1').firstChild);
+/* 预览环境提醒：Muse 聊天窗口的文件预览 iframe 会限制对外网络，API 功能需下载后用浏览器打开 */
+if(window.self!==window.top){
+  var pw=document.createElement('div');
+  pw.style.cssText='background:#fff8e1;border:1px solid #e6c200;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#7a5c00';
+  pw.textContent='检测到当前在内嵌预览中打开：API 拉取/调用可能因预览环境网络限制失败。请下载本文件后用 Chrome/Edge 直接打开，全部功能即正常。';
+  apiCard.insertBefore(pw, apiCard.firstChild);
+}
+(function(){ var c=apiGet();
+  var ps=$('apiProvider');
+  Object.keys(FS_PROVIDERS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=FS_PROVIDERS[k].label; ps.appendChild(o); });
+  if(c.provider&&FS_PROVIDERS[c.provider]) ps.value=c.provider;
+  if(c.base)$('apiBase').value=c.base; if(c.key)$('apiKey').value=c.key;
+  if(c.base2)$('apiBase2').value=c.base2; if(c.key2)$('apiKey2').value=c.key2;
+  if(c.chatModel)$('apiChatModel').value=c.chatModel; if(c.visionModel)$('apiVisionModel').value=c.visionModel;
+  renderModelSels(null);
+})();
+$('apiProvider').addEventListener('change', function(){
+  var p=fsProvider();
+  if(p.base) $('apiBase').value=p.base;
+  renderModelSels(null);
+  $('apiMsg').textContent='已切换到'+p.label+'，Base URL 已填入。';
+});
+$('apiSave').addEventListener('click', function(){
+  apiSet({provider:$('apiProvider').value, base:$('apiBase').value.trim(), key:cleanKey($('apiKey').value),
+    base2:$('apiBase2').value.trim(), key2:cleanKey($('apiKey2').value),
+    chatModel:$('apiChatModel').value.trim(), visionModel:$('apiVisionModel').value.trim()});
+  $('apiMsg').textContent='已保存到本浏览器。';
+});
+function apiError(e){ return 'AI 调用失败：'+e.message; }
+
+/* 多线路 failover：按顺序试每条线路，网络层失败自动换下一条（VPN 开关都不影响） */
+function apiEndpoints(){
+  var c=apiGet(), eps=[];
+  var b1=($('apiBase').value.trim()||c.base||''), k1=cleanKey($('apiKey').value||c.key||'');
+  var b2=($('apiBase2').value.trim()||c.base2||''), k2=cleanKey($('apiKey2').value||c.key2||'');
+  if(b1&&k1) eps.push({base:b1.replace(/\/+$/,''), key:k1, name:'主线路'});
+  if(b2&&k2&&b2.replace(/\/+$/,'')!==b1.replace(/\/+$/,'')) eps.push({base:b2.replace(/\/+$/,''), key:k2, name:'备用线路'});
+  window._fsDupLine=!!(b2&&b1&&b2.replace(/\/+$/,'')===b1.replace(/\/+$/,''));
+  return eps;
+}
+async function fetchFailover(path, fetchOpts, timeoutMs){
+  var eps=apiEndpoints();
+  if(!eps.length) throw new Error('先在步骤 1 填写 Base URL 和 API Key');
+  var lastErr=null;
+  for(var i=0;i<eps.length;i++){
+    var ep=eps[i], ctrl=new AbortController();
+    var to=setTimeout(function(){ctrl.abort();}, timeoutMs||20000);
+    try{
+      var headers=Object.assign({}, (fetchOpts&&fetchOpts.headers)||{}, {'Authorization':'Bearer '+ep.key});
+      var r=await fetch(ep.base+path, Object.assign({}, fetchOpts||{}, {headers:headers, signal:ctrl.signal}));
+      clearTimeout(to); window._fsLine=ep.name;
+      return {res:r, ep:ep};
+    }catch(e){ clearTimeout(to); lastErr=e; }
+  }
+  throw lastErr||new Error('所有线路均不可达');
+}
+function lineTag(){ return window._fsLine?('（'+window._fsLine+'）'):''; }
+
+async function callChat(msgs, opts){
+  opts=opts||{};
+  var cfg=apiGet();
+  var model=opts.vision ? (cfg.visionModel||cfg.chatModel) : cfg.chatModel;
+  if(!model) throw new Error('未填写模型名');
+  var rr=await fetchFailover('/chat/completions',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:model, messages:msgs, temperature:0.3, max_tokens:opts.maxTokens||2000})}, 120000);
+  var r=rr.res, t=await r.text(), j=null; try{ j=JSON.parse(t); }catch(e){}
+  if(!r.ok) throw new Error('HTTP '+r.status+lineTag()+'：'+(j&&j.message?j.message:(j?JSON.stringify(j).slice(0,220):t.slice(0,220))));
+  var c=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+  if(!c) throw new Error('模型返回为空');
+  return c;
+}
+$('apiTest').addEventListener('click', async function(){
+  $('apiMsg').textContent='测试中…';
+  try{ var c=await callChat([{role:'user',content:'Reply with exactly: ok'}],{maxTokens:10});
+    $('apiMsg').textContent='连接成功，模型回复：'+c.trim().slice(0,40);
+  }catch(e){ $('apiMsg').textContent=apiError(e); }
+});
+/* ---- 拉取模型列表（/models，OpenAI 兼容）；失败则静默降级用内置清单 ---- */
+async function fetchModels(silent){
+  if(!silent) $('apiMsg').textContent='拉取模型列表中…';
+  try{
+    var rr=await fetchFailover('/models',{method:'GET'},20000);
+    var r=rr.res, t=await r.text(), j=null; try{ j=JSON.parse(t); }catch(e){}
+    if(!r.ok) throw new Error('HTTP '+r.status+lineTag()+'：'+(j&&j.message?j.message:t.slice(0,200)));
+    var arr=(j&&(j.data||j.models))||[];
+    var ids=arr.map(function(m){return m.id||m.model||m.name||m;}).filter(Boolean);
+    ids=ids.filter(function(v,i){return ids.indexOf(v)===i;}).sort();
+    if(!ids.length) throw new Error('返回了空列表');
+    renderModelSels(ids);
+    if(!silent) $('apiMsg').textContent='拉取到 '+ids.length+' 个模型'+lineTag()+'，已按"账号已开通"分组。';
+  }catch(e){
+    renderModelSels(null);
+    if(silent) return;
+    var msg='实时拉取失败，已改用内置推荐清单（下拉框照常可选）';
+    if(window._fsDupLine) msg+='；另：主/备用填的是同一个地址，failover 不起作用';
+    $('apiMsg').textContent=msg+'。';
+  }
+}
+$('apiFetchModels').addEventListener('click', function(){ fetchModels(false); });
+/* 网络诊断：逐条线路区分"网络不通"和"CORS" */
+$('apiDiag').addEventListener('click', async function(){
+  var eps=apiEndpoints();
+  if(!eps.length){ $('apiMsg').textContent='先填 Base URL 和 API Key'; return; }
+  $('apiMsg').textContent='诊断中…';
+  var env='【页面环境】protocol='+location.protocol+', origin='+(location.origin||'(空)')+
+    ', '+(window.self!==window.top?'在 iframe/内嵌预览中打开':'顶层浏览器窗口直接打开');
+  var out=[];
+  for(var i=0;i<eps.length;i++){
+    var ep=eps[i], tag='【'+ep.name+'】';
+    try{ var r=await fetch(ep.base+'/models',{mode:'no-cors'});
+      out.push(tag+'网络层：'+(r.type==='opaque'?'可达':'type='+r.type));
+    }catch(e){ out.push(tag+'网络层：不通（'+e.message+'）'); }
+    try{ var r2=await fetch(ep.base+'/models',{method:'GET'});
+      out.push(tag+'CORS：通过，HTTP '+r2.status+'（401 说明接口正常）');
+    }catch(e){ out.push(tag+'CORS：失败（'+e.message+'）'); }
+  }
+  $('apiMsg').textContent=env+'；诊断结果 — '+out.join('；');
+});
+/* Key 输入时即时清洗（借自 FigureForge）：粘贴带换行/空格的 Key 当场变干净 */
+$('apiKey').addEventListener('input', function(){ var v=cleanKey(this.value); if(v!==this.value) this.value=v; });
+$('apiKey2').addEventListener('input', function(){ var v=cleanKey(this.value); if(v!==this.value) this.value=v; });
+/* Key 填完失焦后自动拉取一次 */
+$('apiKey').addEventListener('blur', function(){
+  var base=$('apiBase').value.trim(), key=$('apiKey').value.trim();
+  if(base&&key&&!window._fsFetched){ window._fsFetched=true; fetchModels(true); }
+});
+/* 打开页面时若已有保存的配置，静默拉取 */
+(function(){ var c=apiGet(); if(c.base&&c.key){ window._fsFetched=true; fetchModels(true); } })();
+function extractJSON(s){
+  var m=s.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error('模型未返回 JSON');
+  return JSON.parse(m[0]);
+}
+
+/* ---- 功能A：AI 复核推荐（步骤2） ---- */
+var aiBox=document.createElement('div');
+aiBox.innerHTML='<button class="btn ghost" id="btnAiReview">AI 复核推荐</button> <span class="hint" id="aiReviewMsg"></span><div class="recgrid" id="aiRecGrid" style="margin-top:10px"></div>';
+$('step2').querySelector('.card').insertBefore(aiBox, $('recMsg'));
+$('btnAiReview').addEventListener('click', async function(){
+  var g=$('aiRecGrid'); g.innerHTML=''; $('aiReviewMsg').textContent='';
+  if(!S.files.length){ $('aiReviewMsg').textContent='先投喂数据。'; return; }
+  $('aiReviewMsg').textContent='AI 分析中…';
+  try{
+    var schema=S.files.map(function(f){ return {file:f.name, rows:f.n,
+      columns:f.cols.map(function(c){return c.name+'('+c.type+')';}).join(', ')}; });
+    var sys='你是科研绘图助手。根据数据表结构推荐可绘制的科研图。图类型只能从以下选：'+
+      Object.keys(CHARTS).map(function(k){return k+'='+CHARTS[k].name;}).join('，')+
+      '。列映射 key 按图类型：scatter/grouped-scatter/bubble 用 x,y[,group/size]；boxplot/bar-mean 用 group,value；grouped-bar 用 group,sub,value；line 用 x,y；histogram 用 value；heatmap-corr 不需映射；forest 用 label,est,lo,hi。'+
+      '只输出 JSON：{"suggestions":[{"file":"文件名","chart":"类型key","map":{...},"reason":"一句话理由"}]}，不要其他文字。';
+    var raw=await callChat([{role:'system',content:sys},{role:'user',content:'数据表：\n'+JSON.stringify(schema)+
+      (S.paper?'\n研究逻辑/论文原文（节选）：\n'+S.paper.slice(0,1500)+'\n请结合研究逻辑，推荐最贴合的图。':'\n请推荐。')}]);
+    var j=extractJSON(raw), n=0;
+    (j.suggestions||[]).forEach(function(s){
+      if(!CHARTS[s.chart]) return;
+      var f=S.files.filter(function(x){return x.name===s.file;})[0]||S.files[0];
+      var c=document.createElement('div'); c.className='reccard';
+      var mapHtml=Object.keys(s.map||{}).map(function(k){return k+':<code>'+esc(s.map[k])+'</code>';}).join(' ｜ ');
+      c.innerHTML='<div class="rname">'+CHARTS[s.chart].name+' <span class="tag ok">AI 建议</span></div>'+
+        '<div class="rwhy">'+esc(f.name)+'<br>'+esc(s.reason||'')+'</div>'+
+        (mapHtml?'<div class="rmap">'+mapHtml+'</div>':'')+'<button class="btn">用此配置绘制</button>';
+      c.querySelector('button').addEventListener('click', function(){
+        S.draw.fileId=f.id; S.draw.chart=s.chart; S.draw.map=Object.assign({},s.map||{}); S.draw.tplId=null;
+        gotoStep(4);
+      });
+      g.appendChild(c); n++;
+    });
+    $('aiReviewMsg').textContent=n?('AI 给出 '+n+' 条建议（仅文本建议，数据未外发）。'):'AI 未返回有效建议。';
+  }catch(e){ $('aiReviewMsg').textContent=apiError(e); }
+});
+
+/* ---- 功能B：英文图注生成（步骤4） ---- */
+var capBox=document.createElement('div');
+capBox.style.marginTop='10px';
+capBox.innerHTML='<button class="btn ghost" id="btnCaption">AI 生成英文图注</button> '+
+ '<button class="btn ghost" id="btnCaptionLocal">本地生成（离线）</button> <span class="hint" id="capMsg"></span>'+
+ '<div><textarea id="capOut" rows="3" style="width:100%;margin-top:8px;border:1px solid #c8d4db;border-radius:8px;padding:10px;font-size:13px;display:none"></textarea></div>';
+$('step4').querySelector('.card').appendChild(capBox);
+/* 本地图注：模板生成，离线可用 */
+function localCaption(){
+  var f=getFile(S.draw.fileId); if(!f) return null;
+  var ch=S.draw.chart, map=S.draw.map||{}, n=f.n, M=function(k){return map[k]||k;}, s='';
+  if(ch==='scatter'){
+    s='Scatter plot of '+M('y')+' versus '+M('x')+' (n = '+n+').';
+    var xv=colNums(f,map.x), yv=colNums(f,map.y);
+    if(xv.length>2&&xv.length===yv.length) s+=' Pearson r = '+pearson(xv,yv).toFixed(2)+'.';
+  }else if(ch==='grouped-scatter'){
+    s='Scatter plot of '+M('y')+' versus '+M('x')+' grouped by '+M('group')+' (n = '+n+').';
+  }else if(ch==='boxplot'){
+    s='Box plots of '+M('value')+' across '+M('group')+' (n = '+n+'). Boxes show median and interquartile range; whiskers extend to 1.5\u00d7IQR.';
+  }else if(ch==='bar-mean'){
+    s='Mean '+M('value')+' by '+M('group')+' (n = '+n+'). Error bars indicate \u00b11 SD.';
+  }else if(ch==='grouped-bar'){
+    s='Mean '+M('value')+' by '+M('group')+' and '+M('sub')+' (n = '+n+'). Error bars indicate \u00b11 SD.';
+  }else if(ch==='heatmap-corr'){
+    var k=f.cols.filter(function(c){return c.type==='numeric';}).length;
+    s='Pearson correlation matrix of '+k+' numeric variables (n = '+n+').';
+  }else if(ch==='line'){
+    s='Line chart of '+M('y')+' over '+M('x')+' (n = '+n+').';
+  }else if(ch==='histogram'){
+    var v=colNums(f,map.value);
+    s='Distribution of '+M('value')+' (n = '+v.length+').';
+    if(v.length) s+=' Mean = '+mean(v).toFixed(2)+', SD = '+sd(v).toFixed(2)+'.';
+  }else if(ch==='bubble'){
+    s='Bubble chart of '+M('y')+' versus '+M('x')+', with bubble size proportional to '+M('size')+' (n = '+n+').';
+  }else if(ch==='forest'){
+    s='Forest plot of effect estimates with 95% confidence intervals ('+n+' comparisons).';
+  }else s='Figure (n = '+n+').';
+  return s;
+}
+$('btnCaptionLocal').addEventListener('click', function(){
+  var f=getFile(S.draw.fileId); if(!f){ $('capMsg').textContent='先选择数据文件。'; return; }
+  var ta=$('capOut'); ta.style.display='block'; ta.value=localCaption();
+  $('capMsg').textContent='本地模板生成（离线可用），复制后可微调。';
+});
+$('btnCaption').addEventListener('click', async function(){
+  var f=getFile(S.draw.fileId); if(!f){ $('capMsg').textContent='先选择数据文件。'; return; }
+  $('capMsg').textContent='生成中…'; $('capOut').style.display='none';
+  try{
+    var stats=f.cols.filter(function(c){return c.type==='numeric';}).slice(0,6).map(function(c){
+      var v=colNums(f,c.name); return c.name+': n='+v.length+', mean='+mean(v).toFixed(2)+', sd='+sd(v).toFixed(2);
+    }).join('; ');
+    var sys='你是科研论文写作助手。为 Figure 写英文图注（caption）。要求：学术语气，一到三句，包含图类型、变量、样本量；只输出图注正文，不要解释、不要引号。';
+    var cap=await callChat([{role:'system',content:sys},
+      {role:'user',content:'图类型：'+CHARTS[S.draw.chart].name+'\n数据文件：'+f.name+'（'+f.n+' 行）\n数值列统计：'+stats+'\n列映射：'+JSON.stringify(S.draw.map)}],
+      {maxTokens:400});
+    var ta=$('capOut'); ta.style.display='block'; ta.value=cap.trim();
+    $('capMsg').textContent='已生成，可复制使用。';
+  }catch(e){ $('capMsg').textContent=apiError(e); }
+});
+
+/* ---- 功能C：AI 风格迁移（步骤4） ---- */
+var stBox=document.createElement('div');
+stBox.style.marginTop='10px';
+stBox.innerHTML='<button class="btn ghost" id="btnStyle">AI 风格迁移</button> '+
+ '<label class="hint"><input type="checkbox" id="stVision"> 让模型看样板图（需视觉模型）</label> '+
+ '<span class="hint" id="stMsg"></span><div class="hint" id="stSug" style="margin-top:6px"></div>'+
+ '<div class="hint" style="margin-top:4px">离线替代：直接用上方"样式"→"配色"下拉框切换期刊风（新增 Science / Cell 配色），即时生效。</div>';
+$('step4').querySelector('.card').appendChild(stBox);
+function thumbToPngDataURL(tpl){
+  return new Promise(function(res, rej){
+    var s=tpl.thumb.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+    var img=new Image();
+    img.onload=function(){ try{
+      var cv=document.createElement('canvas'); cv.width=400; cv.height=220;
+      var x=cv.getContext('2d'); x.fillStyle='#ffffff'; x.fillRect(0,0,400,220);
+      x.drawImage(img,0,0,400,220); res(cv.toDataURL('image/png'));
+    }catch(e){ rej(e); } };
+    img.onerror=rej;
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+  });
+}
+$('btnStyle').addEventListener('click', async function(){
+  $('stMsg').textContent='分析中…'; $('stSug').textContent='';
+  try{
+    var tpl=TEMPLATES.filter(function(t){return t.id===S.draw.tplId;})[0] ||
+            TEMPLATES.filter(function(t){return t.chart===S.draw.chart;})[0];
+    var sys='你是科研配图样式专家。根据样板图风格，给出一套 ECharts 可用的样式方案。'+
+      '只输出 JSON：{"palette":["#hex","#hex","#hex","#hex","#hex"],"font":"serif 或 sans","grid":true/false,"suggestion":"一句话样式说明中文"}，不要其他文字。'+
+      '要求：学术期刊质感，配色和谐，5 个 hex 颜色。';
+    var userText='样板：'+tpl.name+'（'+tpl.style+'，'+tpl.desc+'），图类型：'+CHARTS[tpl.chart].name;
+    var msgs, useVision=$('stVision').checked;
+    if(useVision){
+      var durl=await thumbToPngDataURL(tpl);
+      msgs=[{role:'system',content:sys},
+        {role:'user',content:[{type:'text',text:userText+'。请看这张样板缩略图，给出样式方案。'},
+          {type:'image_url',image_url:{url:durl}}]}];
+    } else {
+      msgs=[{role:'system',content:sys},{role:'user',content:userText}];
+    }
+    var raw=await callChat(msgs, {vision:useVision, maxTokens:800});
+    var j=extractJSON(raw);
+    if(j.palette&&j.palette.length>=3){
+      PALS.custom=j.palette.slice(0,7); S.style.pal='custom';
+      var dp=$('dPal'), has=false;
+      for(var i=0;i<dp.options.length;i++) if(dp.options[i].value==='custom') has=true;
+      if(!has){ var o=document.createElement('option'); o.value='custom'; o.textContent='AI 迁移配色'; dp.appendChild(o); }
+      dp.value='custom';
+    }
+    if(j.font==='serif'||j.font==='sans'){ S.style.font=j.font; $('dFont').value=j.font; }
+    if(typeof j.grid==='boolean'){ S.style.grid=j.grid; $('dGrid').checked=j.grid; }
+    drawChart();
+    $('stSug').textContent='已应用。'+(j.suggestion||'');
+    $('stMsg').textContent='';
+  }catch(e){ $('stMsg').textContent=apiError(e); }
+});
+})();
+
+</script>
+</body>
+</html>
